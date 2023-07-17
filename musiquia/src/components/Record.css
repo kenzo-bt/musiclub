@@ -15,7 +15,7 @@
   flex-direction: column;
 }
 
-.Record:first-child {
+.Record:last-child {
   margin-top: 25px
 }
 

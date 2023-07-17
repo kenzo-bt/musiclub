@@ -30,7 +30,7 @@ function AddTab(props){
       }
 
       // Send HTTP request and store response
-      const response = await fetch('https://api.spotify.com/v1/search?q=' + searchQuery + '&type=album&limit=5', queryParameters);
+      const response = await fetch('https://api.spotify.com/v1/search?q=' + searchQuery + '&type=album&limit=20', queryParameters);
       if (response.status === 200) {
         const data = await response.json();
         setAlbums(data.albums.items);
