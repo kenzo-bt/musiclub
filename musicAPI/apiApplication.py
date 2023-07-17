@@ -1,4 +1,5 @@
 import json
+import requests
 from flask import Flask, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
@@ -46,6 +47,11 @@ class Liked(db.Model):
 majority = 3
 
 ###### ROUTES
+
+@app.route('/debugRequests')
+def debugRequests():
+    response = requests.get('https://w3schools.com/python/demopage.htm')
+    return {"response": response.text}, 200
 
 # Redirect to index.html
 @app.route('/')

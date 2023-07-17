@@ -26,10 +26,17 @@
 .likeButton {
   height: 25px;
   width: auto;
+  /*pointer-events: auto;*/
+  border: none;
 }
 
 .playButton {
   height: 20px;
   width: auto;
   margin-right: 10px;
+}
+
+.processing {
+  /*pointer-events: none;*/
+  border: 3px solid yellow;
 }

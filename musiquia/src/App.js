@@ -138,6 +138,7 @@ function App() {
   }, []);
 
   async function checkIfTokenAlive(token) {
+    console.log("Checking if access token is still alive...");
     const queryParameters = {
       method: 'GET',
       headers: {
@@ -168,9 +169,11 @@ function App() {
     const res = await fetch('https://www.myxos.online/musicAPI/auth/accessToken', postParameters);
     if (res.status === 200) {
       console.log("Successfully updated access token in database");
+      return true;
     }
     else {
       console.log("Error: Unable to update access token in database");
+      return false;
     }
   }
 
@@ -210,10 +213,16 @@ function App() {
           const data = await response.json();
           console.log("New access token received from Spotify API");
           console.log(data);
-          updateAccessTokenInDatabase(data.access_token);
+          const updateSuccessful = await updateAccessTokenInDatabase(data.access_token);
           // setAccessToken(data.access_token);
-          document.getElementById("spotifyToken").innerHTML = data.access_token;
-          return true;
+          if (updateSuccessful) {
+            document.getElementById("spotifyToken").innerHTML = data.access_token;
+            return true;
+          }
+          else {
+            console.log("Error: Failed to update access token in database");
+            return false;
+          }
         }
         else {
           console.log("Error: Couldn't get new access token from Spotify API - Status code: " + response.status);

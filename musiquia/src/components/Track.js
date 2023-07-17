@@ -4,6 +4,7 @@ import './Track.css';
 
 function Track(props) {
   const [playing, setPlaying] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [isLiked, setIsLiked] = useState(props.liked);
 
   async function addTrackToLiked() {
@@ -19,8 +20,8 @@ function Track(props) {
       return true;
     }
     else if (response.status === 250) { // Add to playlist
-      addTrackToPlaylist();
-      return true;
+      const playlistEditSuccess = await addTrackToPlaylist();
+      return playlistEditSuccess ? true : false;
     }
     else {
       return false;
@@ -40,8 +41,8 @@ function Track(props) {
       return true;
     }
     else if (response.status === 251) { // Remove from playlist
-      removeTrackFromPlaylist();
-      return true;
+      const playlistEditSuccess = await removeTrackFromPlaylist();
+      return playlistEditSuccess ? true : false;
     }
     else {
       return false;
@@ -49,32 +50,34 @@ function Track(props) {
   }
 
   async function toggleFavourite() {
+    setIsLiked(!isLiked);
+    setProcessing(true);
     if (isLiked) {
       // Remove from liked tracks in server
       const removeSuccess = await removeTrackFromLiked();
-      if (removeSuccess) {
-        setIsLiked(!isLiked);
-      }
-      else {
+      if (!removeSuccess) {
+        // if failed to remove, reset icon
+        setIsLiked(true);
         console.log("Error: Unable to remove track from user's likedTracks");
       }
     }
     else {
       // Add to liked tracks in server
       const addSuccess = await addTrackToLiked();
-      if (addSuccess) {
-        setIsLiked(!isLiked);
-      }
-      else {
+      if (!addSuccess) {
+        setIsLiked(false);
         console.log("Error: Unable to add track to user's likedTracks");
       }
     }
+    setProcessing(false);
   }
 
   function favouriteTrack(event) {
     event.stopPropagation();
     console.log("Clicked on track " + props.name + " - ID: " + props.id);
-    toggleFavourite();
+    if (!processing) {
+      toggleFavourite();
+    }
   }
 
   async function checkTrackDuplication() {
@@ -132,14 +135,22 @@ function Track(props) {
       const response = await fetch("https://api.spotify.com/v1/playlists/" + PLAYLIST_ID + "/tracks", requestParameters);
       if (response.status === 201) {
         console.log("Added track successfully to playlist");
+        return true;
       }
       else if (response.status === 401) {
         console.log("Access token has expired. Requesting new token...");
         const tokenRenewalSuccess = await props.onTokenExpiration();
         if (tokenRenewalSuccess) {
           console.log("Token available to Track.js : " + props.requestToken());
-          addTrackToPlaylist();
+          return await addTrackToPlaylist();
         }
+        else {
+          console.log("Could not renew token...");
+          return false;
+        }
+      }
+      else {
+        return false;
       }
     }
   }
@@ -160,14 +171,22 @@ function Track(props) {
     const response = await fetch("https://api.spotify.com/v1/playlists/" + PLAYLIST_ID + "/tracks", requestParameters);
     if (response.status === 200) {
       console.log("Track successfully removed from playlist");
+      return true;
     }
     else if (response.status === 401) {
       console.log("Access token has expired. Requesting new token...");
       const tokenRenewalSuccess = await props.onTokenExpiration();
       if (tokenRenewalSuccess) {
         console.log("Token available to Track.js : " + props.requestToken());
-        removeTrackFromPlaylist();
+        return await removeTrackFromPlaylist();
       }
+      else {
+        console.log("Could not renew token...");
+        return false;
+      }
+    }
+    else {
+      return false;
     }
   }
 
@@ -186,7 +205,7 @@ function Track(props) {
   }
 
   return (
-    <div className="Track" onClick={favouriteTrack}>
+    <div className="Track">
       <div className="trackName">{props.name}</div>
       <div className="trackButtons">
         {
@@ -201,7 +220,7 @@ function Track(props) {
           :
             ""
         }
-        <img className="likeButton" src={"star" + (isLiked ? "Select" : "") + ".png"} alt="star icon" />
+        <img className={"likeButton" + (processing ? " processing" : "")} src={"star" + (isLiked ? "Select" : "") + ".png"} alt={isLiked ? "liked" : "unlike"} onClick={favouriteTrack} />
       </div>
     </div>
   );
