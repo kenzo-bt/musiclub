@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '../Globals.js';
 import './Track.css';
 
 function Track(props) {
@@ -13,7 +14,7 @@ function Track(props) {
         'Content-Type': 'application/json'
       }
     };
-    const response = await fetch("https://www.myxos.online/musicAPI/users/" + props.userInfo.id + "/addTrackFull/" + props.id, requestParameters);
+    const response = await fetch(API_URL + "users/" + props.userInfo.id + "/addTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
       console.log("Added track to liked...");
       return true;
@@ -30,7 +31,7 @@ function Track(props) {
         'Content-Type': 'application/json'
       }
     };
-    const response = await fetch("https://www.myxos.online/musicAPI/users/" + props.userInfo.id + "/removeTrackFull/" + props.id, requestParameters);
+    const response = await fetch(API_URL + "users/" + props.userInfo.id + "/removeTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
       console.log("Removed track from liked...");
       return true;

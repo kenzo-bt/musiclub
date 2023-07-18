@@ -4,6 +4,7 @@ import AlbumsTab from './components/AlbumsTab.js';
 import PlaylistTab from './components/PlaylistTab.js';
 import Menu from './components/Menu.js';
 import { useEffect, useState } from 'react';
+import { API_URL } from './Globals.js';
 
 function App() {
   // const [accessToken, setAccessToken] = useState("");
@@ -20,7 +21,7 @@ function App() {
           'Content-Type': 'application/json'
         }
       }
-      const res = await fetch("https://www.myxos.online/musicAPI/auth/accessToken", params);
+      const res = await fetch(API_URL + "auth/accessToken", params);
       if (res.status === 200) {
         const data = await res.json();
         console.log("Fetched working token from server: " + data.accessToken);
@@ -96,7 +97,7 @@ function App() {
       }
     };
 
-    const response = await fetch("https://www.myxos.online/musicAPI/users/" + userLowerInput, requestParameters);
+    const response = await fetch(API_URL + "users/" + userLowerInput, requestParameters);
     if (response.status === 404) {
       errorDiv.innerHTML = "User does not exist";
     }
@@ -127,7 +128,7 @@ function App() {
         'Content-Type': 'application/json'
       }
     }
-    const res = await fetch("https://www.myxos.online/musicAPI/auth/accessToken", params);
+    const res = await fetch(API_URL + "auth/accessToken", params);
     if (res.status === 200) {
       const data = await res.json();
       console.log("Fetched working token from server: " + data.accessToken);

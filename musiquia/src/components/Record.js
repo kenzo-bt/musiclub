@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './Record.css';
 import Track from './Track.js';
-import { showAlert, getLocalToken } from '../Globals.js';
+import { showAlert, getLocalToken, API_URL } from '../Globals.js';
 
 function Record(props) {
   const [tracksVisible, setTracksVisible] = useState(false);
@@ -83,7 +83,7 @@ function Record(props) {
             tracks: retrievedTracks
           })
         }
-        await fetch('https://www.myxos.online/musicAPI/selectedAlbums', requestParameters)
+        await fetch(API_URL + 'selectedAlbums', requestParameters)
           .then(response => response.json())
           .then(data => {
             if(data.error !== undefined) {
@@ -155,7 +155,7 @@ function Record(props) {
         'Content-Type': 'application/json'
       }
     }
-    const res = await fetch("https://www.myxos.online/musicAPI/selectedAlbums/" + props.albumID, params);
+    const res = await fetch(API_URL + "selectedAlbums/" + props.albumID, params);
     if (res.status === 200) {
       console.log("Album successfully deleted");
       setHidden(true);
