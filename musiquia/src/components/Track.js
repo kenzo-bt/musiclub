@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PLAYLIST_ID } from '../Globals.js';
+// import { PLAYLIST_ID } from '../Globals.js';
 import './Track.css';
 
 function Track(props) {
@@ -14,14 +14,10 @@ function Track(props) {
         'Content-Type': 'application/json'
       }
     };
-    const response = await fetch("https://www.myxos.online/musicAPI/users/" + props.userInfo.id + "/addTrack/" + props.id, requestParameters);
+    const response = await fetch("https://www.myxos.online/musicAPI/users/" + props.userInfo.id + "/addTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
       console.log("Added track to liked...");
       return true;
-    }
-    else if (response.status === 250) { // Add to playlist
-      const playlistEditSuccess = await addTrackToPlaylist();
-      return playlistEditSuccess ? true : false;
     }
     else {
       return false;
@@ -35,14 +31,10 @@ function Track(props) {
         'Content-Type': 'application/json'
       }
     };
-    const response = await fetch("https://www.myxos.online/musicAPI/users/" + props.userInfo.id + "/removeTrack/" + props.id, requestParameters);
+    const response = await fetch("https://www.myxos.online/musicAPI/users/" + props.userInfo.id + "/removeTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
       console.log("Removed track from liked...");
       return true;
-    }
-    else if (response.status === 251) { // Remove from playlist
-      const playlistEditSuccess = await removeTrackFromPlaylist();
-      return playlistEditSuccess ? true : false;
     }
     else {
       return false;
@@ -80,6 +72,7 @@ function Track(props) {
     }
   }
 
+  /*
   async function checkTrackDuplication() {
     // Get playlist from spotify https://api.spotify.com/v1/playlists/{playlist_id}
     var queryParameters = {
@@ -117,7 +110,9 @@ function Track(props) {
       return true;
     }
   }
+  */
 
+  /*
   async function addTrackToPlaylist() {
     const trackInPlaylist = await checkTrackDuplication();
     if (!trackInPlaylist) {
@@ -154,7 +149,9 @@ function Track(props) {
       }
     }
   }
+  */
 
+  /*
   async function removeTrackFromPlaylist() {
     const requestParameters = {
       method: 'DELETE',
@@ -189,6 +186,7 @@ function Track(props) {
       return false;
     }
   }
+  */
 
   function togglePlay(event) {
     event.stopPropagation();

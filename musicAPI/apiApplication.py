@@ -1,5 +1,7 @@
+import sys
 import json
 import requests
+import base64
 from flask import Flask, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
@@ -44,7 +46,85 @@ class Liked(db.Model):
 
 ###### GLOBALS
 
+playlistId = "3Z9UoDIlecIROC1I6HYG91"
+clientId = "9cb9b55a9f4f402a8a250030f7c35468"
+clientSecret = "e7a704cc2a4341279936c2feaee4cbe6"
 majority = 3
+
+###### FUNCTIONS
+
+def get_access_token():
+    currentAuthTokens = Auth.query.get(1)
+    if currentAuthTokens is None:
+        return -1
+    accessToken = currentAuthTokens.accessToken
+    refreshToken = currentAuthTokens.refreshToken
+    # Check if access token is alive
+    url = 'https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl'
+    headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return accessToken
+    # Get new acccess token
+    auth_message = clientId + ':' + clientSecret
+    auth_message_bytes = auth_message.encode('ascii')
+    base64_bytes = base64.b64encode(auth_message_bytes)
+    base64_auth_message = base64_bytes.decode('ascii')
+    url = 'https://accounts.spotify.com/api/token'
+    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + base64_auth_message}
+    payload = {'grant_type': 'refresh_token', 'refresh_token': refreshToken}
+    response = requests.post(url, headers=headers, params=payload)
+    if response.status_code == 200:
+        data = response.json()
+        newToken = data['access_token']
+        currentAuthTokens.accessToken = newToken
+        db.session.commit()
+        return newToken
+    else:
+        return -1
+
+def isTrackInPlaylist(id, token):
+    url = 'https://api.spotify.com/v1/playlists/' + playlistId
+    headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        for track in data['tracks']['items']:
+            if track == id:
+                return True
+        return False
+    else:
+        return True
+
+def addToPlaylist(trackId):
+    accessToken = get_access_token()
+    if accessToken == -1:
+        return False
+    else:
+        duplicateTrack = isTrackInPlaylist(trackId, accessToken)
+        if duplicateTrack == False:
+            # Add to playlist
+            url = 'https://api.spotify.com/v1/playlists/' + playlistId + '/tracks'
+            headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
+            payload = {'uris': ['spotify:track:' + trackId], 'position': 0}
+            response = requests.post(url, headers=headers, json=payload)
+            if response.status_code == 201:
+                return True
+        return True
+
+def removeFromPlaylist(trackId):
+    accessToken = get_access_token()
+    if accessToken == -1:
+        return False
+    else:
+        # Add to Playlist
+        url = 'https://api.spotify.com/v1/playlists/' + playlistId + '/tracks'
+        headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
+        payload = {'tracks': [{'uri': 'spotify:track:' + trackId}]}
+        response = requests.delete(url, headers=headers, json=payload)
+        if response.status_code == 200:
+            return True
+        return False
 
 ###### ROUTES
 
@@ -162,6 +242,43 @@ def add_liked_track(id, trackId):
     return add_like(trackId, id)
     # return {"userId": user.id, "addedTrack": trackId}, 200
 
+# FULL add like to track (USER + LIKED + PLAYLIST) -> All or nothing transaction
+@app.route('/users/<id>/addTrackFull/<trackId>', methods=['POST'])
+def add_liked_track_full(id, trackId):
+    # Check if user exists
+    user = User.query.get(id)
+    if user is None:
+        return {"Error": "User not found"}, 404
+    # Check if track already exists inside user's liked tracks
+    likedTracks = json.loads(user.likedTracks)
+    for likedId in likedTracks:
+        if likedId == trackId:
+            return {"Error": "Track already liked by user"}, 400
+    # Check if there is an entry for this track in LIKED
+    track = Liked.query.get(trackId)
+    if track is None:
+        # Create entry for this track
+        newTrack = Liked(id=trackId, likedBy="[]")
+        db.session.add(newTrack)
+        db.session.commit()
+        track = Liked.query.get(trackId)
+    # Check if track needs to be added to playlist
+    users = json.loads(track.likedBy)
+    if len(users) == (majority - 1):
+        # Add to playlist
+        addSuccess = addToPlaylist(trackId)
+        if addSuccess == False:
+            return {"Error": "Unable to add track to playlist"}, 400
+    # USER table update
+    likedTracks.append(trackId)
+    user.likedTracks = json.dumps(likedTracks)
+    # LIKED table update
+    userIdInt = int(id)
+    users.append(userIdInt)
+    track.likedBy = json.dumps(users)
+    db.session.commit()
+    return {"trackId": trackId, "user": userIdInt, "status": "POST SUCCESS"}, 200
+
 # Remove track from user's liked tracks
 @app.route('/users/<id>/removeTrack/<trackId>', methods=['DELETE'])
 def remove_liked_track(id, trackId):
@@ -181,6 +298,42 @@ def remove_liked_track(id, trackId):
         db.session.commit()
         return remove_like(trackId, id)
         # return {"userId": user.id, "removedTrack": trackId}, 200
+    else:
+        return {"Error": "Could not remove. Track was not found on user likedTracks."}, 400
+
+# Remove track from user's liked tracks FULL
+@app.route('/users/<id>/removeTrackFull/<trackId>', methods=['DELETE'])
+def remove_liked_track_full(id, trackId):
+    user = User.query.get(id)
+    if user is None:
+        return {"Error": "User not found"}, 404
+    # Check if track exists inside user's liked tracks
+    likedTracks = json.loads(user.likedTracks)
+    found = False
+    for likedId in likedTracks:
+        if likedId == trackId:
+            found = True
+            break
+    if found:
+        track = Liked.query.get(trackId)
+        users = json.loads(track.likedBy)
+        if len(users) == majority:
+            removeSuccess = removeFromPlaylist(trackId)
+            if removeSuccess == False:
+                return {"Error": "Unable to remove track from playlist"}, 400
+        # Update USER table
+        likedTracks.remove(trackId)
+        user.likedTracks = json.dumps(likedTracks)
+        # Update LIKED table
+        userIdInt = int(id)
+        if userIdInt in users:
+            users.remove(userIdInt)
+            track.likedBy = json.dumps(users)
+        else:
+            return {"Error": "User had not previously liked this song"}, 400
+        # Commit changes
+        db.session.commit()
+        return {"trackId": trackId, "user": userIdInt, "status": "DELETE SUCCESS"}, 200
     else:
         return {"Error": "Could not remove. Track was not found on user likedTracks."}, 400
 
