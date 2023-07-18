@@ -17,6 +17,7 @@ function Track(props) {
     const response = await fetch(API_URL + "users/" + props.userInfo.id + "/addTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
       console.log("Added track to liked...");
+      props.addLike(props.id);
       return true;
     }
     else {
@@ -34,6 +35,7 @@ function Track(props) {
     const response = await fetch(API_URL + "users/" + props.userInfo.id + "/removeTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
       console.log("Removed track from liked...");
+      props.removeLike(props.id);
       return true;
     }
     else {

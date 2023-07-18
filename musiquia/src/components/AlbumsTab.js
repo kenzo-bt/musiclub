@@ -2,24 +2,60 @@ import { useState, useEffect } from 'react';
 import Record from './Record.js';
 import './AlbumsTab.css';
 
-function AlbumsTab(props) {
+function AlbumsTab({requestToken, userInfo}) {
   const [albums, setAlbums] = useState([]);
+  const [likedTracks, setLikedTracks] = useState([]);
 
   useEffect(() => {
-    const queryParameters = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+    async function fetchUserLikes() {
+      const username = userInfo.username;
+      const queryParameters = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+      const response = await fetch('https://myxos.online/musicAPI/users/' + username, queryParameters);
+      if (response.status === 200) {
+        console.log("Fetched user likedTracks");
+        const data = await response.json();
+        setLikedTracks(data.likedTracks);
       }
-    };
+    }
 
-    fetch('https://myxos.online/musicAPI/selectedAlbums', queryParameters)
-      .then(response => response.json())
-      .then(data => {
-        console.log("Fetched from api");
-        setAlbums(data.albums);
-      });
-  }, []);
+    async function fetchAlbums() {
+      const queryParameters = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+      const response = await fetch('https://myxos.online/musicAPI/selectedAlbums', queryParameters);
+      const data = await response.json();
+      setAlbums(data.albums);
+    }
+
+    fetchAlbums();
+    if (userInfo !== undefined && userInfo !== null) {
+      fetchUserLikes();
+    }
+  }, [userInfo]);
+
+  function isTrackLiked(trackId) {
+    return likedTracks.includes(trackId);
+  }
+
+  function addLikedTrack(trackId) {
+    const liked = [...likedTracks];
+    liked.push(trackId);
+    setLikedTracks(liked);
+  }
+
+  function removeLikedTrack(trackId) {
+    const liked = [...likedTracks];
+    const updatedLiked = liked.filter(x => x !== trackId);
+    setLikedTracks(updatedLiked);
+  }
 
   return (
     <div className="Tab container" id="albumsTab">
@@ -35,8 +71,11 @@ function AlbumsTab(props) {
               albumID={album.albumID}
               tracks={album.tracks}
               ownerID={album.ownerID}
-              userInfo={props.userInfo}
-              requestToken={props.requestToken}
+              userInfo={userInfo}
+              requestToken={requestToken}
+              isTrackLiked={isTrackLiked}
+              addLike={addLikedTrack}
+              removeLike={removeLikedTrack}
             />
           );
         })}

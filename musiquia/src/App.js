@@ -7,10 +7,8 @@ import { useEffect, useState } from 'react';
 import { API_URL } from './Globals.js';
 
 function App() {
-  // const [accessToken, setAccessToken] = useState("");
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [user, setUser] = useState(undefined);
-  // const [myLikedTracks, setMyLikedTracks] = useState([]);
 
   // useEffect will run only once when application loads
   useEffect(() => {

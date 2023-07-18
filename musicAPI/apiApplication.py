@@ -179,7 +179,7 @@ def get_user(name):
     user = User.query.filter_by(username=name).first()
     if user is None:
         return {"Error": "User not found"}, 404
-    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}
+    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}, 200
 
 # Add user
 @app.route('/users', methods=['POST'])

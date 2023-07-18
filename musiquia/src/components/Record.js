@@ -181,14 +181,18 @@ function Record(props) {
           {
             props.tracks !== undefined ?
               props.tracks.map(track => {
-                let isLiked = false;
-                if (props.userInfo !== undefined) {
-                  if (props.userInfo.likedTracks.includes(track.id)) {
-                    isLiked = true;
-                  }
-                }
+                const isLiked = props.isTrackLiked(track.id);
                 return (
-                  <Track name={track.name} id={track.id} preview={track.preview} liked={isLiked} userInfo={props.userInfo} requestToken={props.requestToken} />
+                  <Track
+                    name={track.name}
+                    id={track.id}
+                    preview={track.preview}
+                    liked={isLiked}
+                    userInfo={props.userInfo}
+                    requestToken={props.requestToken}
+                    addLike={props.addLike}
+                    removeLike={props.removeLike}
+                  />
                 );
               })
               :
