@@ -4,237 +4,34 @@ import AlbumsTab from './components/AlbumsTab.js';
 import PlaylistTab from './components/PlaylistTab.js';
 import Menu from './components/Menu.js';
 import { useEffect, useState } from 'react';
-import { CLIENT_ID, CLIENT_SECRET } from './Globals.js';
 
 function App() {
   // const [accessToken, setAccessToken] = useState("");
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [user, setUser] = useState(undefined);
+  // const [myLikedTracks, setMyLikedTracks] = useState([]);
 
   // useEffect will run only once when application loads
   useEffect(() => {
-    const getTokenFromServer = async () => {
-      async function getAccessToken() {
-        const params = {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-        const res = await fetch("https://www.myxos.online/musicAPI/auth/tokens", params);
-        if (res.status === 200) {
-          const data = await res.json();
-          return data.accessToken;
-        }
-        else {
-          return -1;
+    async function getAccessToken() {
+      const params = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
         }
       }
-
-      async function updateAccessToken(token) {
-        // Add album to database
-        const postParameters = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            accessToken: token
-          })
-        }
-        const res = await fetch('https://www.myxos.online/musicAPI/auth/accessToken', postParameters);
-        if (res.status === 200) {
-          console.log("Successfully updated access token in database");
-        }
-        else {
-          console.log("Error: Unable to update access token in database");
-        }
-      }
-
-      async function getRefreshToken() {
-        const params = {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-        const res = await fetch("https://www.myxos.online/musicAPI/auth/tokens", params);
-        if (res.status === 200) {
-          const data = await res.json();
-          return data.refreshToken;
-        }
-        else {
-          return -1;
-        }
-      }
-
-      async function checkIfAlive(token) {
-        const queryParameters = {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-          }
-        }
-        const res = await fetch("https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl", queryParameters);
-        if (res.status === 200) {
-          return true;
-        }
-        else {
-          return false;
-        }
-      }
-
-      async function getNewToken(refreshToken) {
-        const authParameters = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET)
-          },
-          body: 'grant_type=refresh_token&refresh_token=' + refreshToken
-        }
-        const res = await fetch("https://accounts.spotify.com/api/token", authParameters);
-        if (res.status === 200) {
-          const data = await res.json();
-          console.log(data);
-          return data.access_token;
-        }
-        else {
-          return -1;
-        }
-      }
-
-      // Get access token from server
-      console.log("Getting access token from server...");
-      const accToken = await getAccessToken();
-      // Sanity check to see if token still alive
-      console.log("Checking if access token is still alive...");
-      const tokenAlive = await checkIfAlive(accToken);
-      if (tokenAlive) {
-        // Token works!
-        console.log("Token works!");
-        // setAccessToken(accToken);
-        document.getElementById("spotifyToken").innerHTML = accToken;
+      const res = await fetch("https://www.myxos.online/musicAPI/auth/accessToken", params);
+      if (res.status === 200) {
+        const data = await res.json();
+        console.log("Fetched working token from server: " + data.accessToken);
+        document.getElementById("spotifyToken").innerHTML = data.accessToken;
       }
       else {
-        // Refresh token
-        console.log("Token has expired. Refreshing token...");
-        const refToken = await getRefreshToken();
-        const newToken = await getNewToken(refToken);
-        if (newToken !== -1) {
-          console.log("New access token has been received from Spotify API. Updating token in database...");
-          // Update the new access token in the database
-          updateAccessToken(newToken);
-          // setAccessToken(newToken);
-          document.getElementById("spotifyToken").innerHTML = newToken;
-        }
-        else {
-          console.log("Error: Unable to get new access token");
-        }
+        console.log("Error: Unable to fetch a working token from server");
       }
-    };
-    getTokenFromServer();
+    }
+    getAccessToken();
   }, []);
-
-  async function checkIfTokenAlive(token) {
-    console.log("Checking if access token is still alive...");
-    const queryParameters = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      }
-    }
-    const res = await fetch("https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl", queryParameters);
-    if (res.status === 200) {
-      return true;
-    }
-    else {
-      return false;
-    }
-  }
-
-  async function updateAccessTokenInDatabase(token) {
-    // Add album to database
-    const postParameters = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        accessToken: token
-      })
-    }
-    const res = await fetch('https://www.myxos.online/musicAPI/auth/accessToken', postParameters);
-    if (res.status === 200) {
-      console.log("Successfully updated access token in database");
-      return true;
-    }
-    else {
-      console.log("Error: Unable to update access token in database");
-      return false;
-    }
-  }
-
-  async function handleExpiredToken() {
-    // Get refresh token from server
-    const params = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
-    const res = await fetch("https://www.myxos.online/musicAPI/auth/tokens", params);
-    if (res.status === 200) {
-      const data = await res.json();
-      const refToken = data.refreshToken;
-      const accToken = data.accessToken;
-      console.log("Access/Refresh tokens retrieved from server");
-      const tokenAlive = await checkIfTokenAlive(accToken);
-      if (tokenAlive) {
-        // Update local access token with one in the database
-        console.log("Successfully retrieved a valid access token from server");
-        document.getElementById("spotifyToken").innerHTML = accToken;
-        return true;
-      }
-      else {
-        // Request a new access token from spotify API
-        const authParameters = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET)
-          },
-          body: 'grant_type=refresh_token&refresh_token=' + refToken
-        }
-        const response = await fetch("https://accounts.spotify.com/api/token", authParameters);
-        if (response.status === 200) {
-          const data = await response.json();
-          console.log("New access token received from Spotify API");
-          console.log(data);
-          const updateSuccessful = await updateAccessTokenInDatabase(data.access_token);
-          // setAccessToken(data.access_token);
-          if (updateSuccessful) {
-            document.getElementById("spotifyToken").innerHTML = data.access_token;
-            return true;
-          }
-          else {
-            console.log("Error: Failed to update access token in database");
-            return false;
-          }
-        }
-        else {
-          console.log("Error: Couldn't get new access token from Spotify API - Status code: " + response.status);
-          return false;
-        }
-      }
-    }
-    else {
-      console.log("Unable to retrieve refresh token from server");
-      return false;
-    }
-  }
 
   function hideAlert() {
     document.getElementById("alertDialogue").style.display = "none";
@@ -302,31 +99,6 @@ function App() {
     const response = await fetch("https://www.myxos.online/musicAPI/users/" + userLowerInput, requestParameters);
     if (response.status === 404) {
       errorDiv.innerHTML = "User does not exist";
-      /*
-      // Create user and store in database
-      console.log("User not in database");
-      const postParameters = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: userLowerInput,
-          password: hashCode(passInput).toString()
-        })
-      }
-      const res = await fetch('https://www.myxos.online/musicAPI/users', postParameters);
-      console.log(res.status);
-      if (res.status === 201) {
-        const data = await res.json();
-        console.log("User created! Logging in...");
-        setUser(data);
-        // TODO: Softer animation to hide login screen (make a function for this)
-      }
-      else {
-        errorDiv.innerHTML = "Unable to create user";
-      }
-      */
     }
     else {
       // Check if passwords match
@@ -348,8 +120,24 @@ function App() {
     return h;
   }
 
-  function requestToken() {
-    return document.getElementById("spotifyToken").innerHTML;
+  async function requestNewToken() {
+    const params = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+    const res = await fetch("https://www.myxos.online/musicAPI/auth/accessToken", params);
+    if (res.status === 200) {
+      const data = await res.json();
+      console.log("Fetched working token from server: " + data.accessToken);
+      document.getElementById("spotifyToken").innerHTML = data.accessToken;
+      return true;
+    }
+    else {
+      console.log("Error: Unable to fetch a working token from server");
+      return false;
+    }
   }
 
   return (
@@ -377,15 +165,15 @@ function App() {
         </div>
       </div>
       { activeTabIndex === 0 ?
-          <AlbumsTab requestToken={requestToken} onTokenExpiration={handleExpiredToken} userInfo={user} />
+          <AlbumsTab requestToken={requestNewToken} userInfo={user} />
         : ''
       }
       { activeTabIndex === 1 ?
-          <AddTab requestToken={requestToken} onTokenExpiration={handleExpiredToken} userInfo={user} />
+          <AddTab requestToken={requestNewToken} userInfo={user} />
         : ''
       }
       { activeTabIndex === 2 ?
-          <PlaylistTab requestToken={requestToken} onTokenExpiration={handleExpiredToken} userInfo={user} />
+          <PlaylistTab requestToken={requestNewToken} userInfo={user} />
         : ''
       }
       <Menu onButtonClick={changeActiveTab} />

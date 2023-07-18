@@ -37,7 +37,6 @@ function AlbumsTab(props) {
               ownerID={album.ownerID}
               userInfo={props.userInfo}
               requestToken={props.requestToken}
-              onTokenExpiration={props.onTokenExpiration}
             />
           );
         })}

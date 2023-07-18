@@ -7,3 +7,7 @@ export function showAlert(title, message) {
   document.getElementById("alertMessage").innerHTML = message;
   document.getElementById("alertDialogue").style.display = "flex";
 }
+
+export function getLocalToken() {
+  return document.getElementById("spotifyToken").innerHTML;
+}

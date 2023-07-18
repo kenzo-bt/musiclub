@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './Record.css';
 import Track from './Track.js';
-import { showAlert } from '../Globals.js';
+import { showAlert, getLocalToken } from '../Globals.js';
 
 function Record(props) {
   const [tracksVisible, setTracksVisible] = useState(false);
@@ -34,7 +34,7 @@ function Record(props) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + props.requestToken()
+        'Authorization': 'Bearer ' + getLocalToken()
       }
     }
     const response = await fetch("https://api.spotify.com/v1/albums/" + props.albumID + "/tracks", queryParameters);
@@ -45,10 +45,9 @@ function Record(props) {
       return tracks;
     }
     else if (response.status === 401) {
-      console.log("Access token has expired. Requesting new token...");
-      const tokenRenewalSuccess = await props.onTokenExpiration();
-      if (tokenRenewalSuccess) {
-        console.log("Token available to Record.js : " + props.requestToken());
+      console.log("Access token expired while trying to retrieve tracklist. Retrying...");
+      const tokenRetrievalSuccess = await props.requestToken();
+      if (tokenRetrievalSuccess) {
         return fetchTracklist();
       }
     }
@@ -60,8 +59,7 @@ function Record(props) {
 
   async function addAlbum(event) {
     const albumID = props.albumID;
-    const token = props.requestToken();
-    if (albumID !== "" && albumID !== undefined && token !== "" && token !== undefined) {
+    if (albumID !== "" && albumID !== undefined) {
       console.log("Add '" + props.name + "' to selected albums");
       // Activate loading indicator
       showLoadingIndicator(event.target);
@@ -190,7 +188,7 @@ function Record(props) {
                   }
                 }
                 return (
-                  <Track name={track.name} id={track.id} preview={track.preview} liked={isLiked} userInfo={props.userInfo} requestToken={props.requestToken} onTokenExpiration={props.onTokenExpiration} />
+                  <Track name={track.name} id={track.id} preview={track.preview} liked={isLiked} userInfo={props.userInfo} requestToken={props.requestToken} />
                 );
               })
               :

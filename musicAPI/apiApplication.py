@@ -53,36 +53,6 @@ majority = 3
 
 ###### FUNCTIONS
 
-def get_access_token():
-    currentAuthTokens = Auth.query.get(1)
-    if currentAuthTokens is None:
-        return -1
-    accessToken = currentAuthTokens.accessToken
-    refreshToken = currentAuthTokens.refreshToken
-    # Check if access token is alive
-    url = 'https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl'
-    headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return accessToken
-    # Get new acccess token
-    auth_message = clientId + ':' + clientSecret
-    auth_message_bytes = auth_message.encode('ascii')
-    base64_bytes = base64.b64encode(auth_message_bytes)
-    base64_auth_message = base64_bytes.decode('ascii')
-    url = 'https://accounts.spotify.com/api/token'
-    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + base64_auth_message}
-    payload = {'grant_type': 'refresh_token', 'refresh_token': refreshToken}
-    response = requests.post(url, headers=headers, params=payload)
-    if response.status_code == 200:
-        data = response.json()
-        newToken = data['access_token']
-        currentAuthTokens.accessToken = newToken
-        db.session.commit()
-        return newToken
-    else:
-        return -1
-
 def isTrackInPlaylist(id, token):
     url = 'https://api.spotify.com/v1/playlists/' + playlistId
     headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token}
@@ -127,11 +97,6 @@ def removeFromPlaylist(trackId):
         return False
 
 ###### ROUTES
-
-@app.route('/debugRequests')
-def debugRequests():
-    response = requests.get('https://w3schools.com/python/demopage.htm')
-    return {"response": response.text}, 200
 
 # Redirect to index.html
 @app.route('/')
@@ -224,24 +189,6 @@ def add_user():
     db.session.commit()
     return {"id": user.id, "username": user.username, "password": user.password}, 201
 
-# Add track to user's liked tracks
-@app.route('/users/<id>/addTrack/<trackId>', methods=['POST'])
-def add_liked_track(id, trackId):
-    user = User.query.get(id)
-    if user is None:
-        return {"Error": "User not found"}, 404
-    # Check if track already exists inside user's liked tracks
-    likedTracks = json.loads(user.likedTracks)
-    for likedId in likedTracks:
-        if likedId == trackId:
-            return {"Error": "Track already liked by user"}, 400
-    # Add track to user's liked tracks
-    likedTracks.append(trackId)
-    user.likedTracks = json.dumps(likedTracks)
-    db.session.commit()
-    return add_like(trackId, id)
-    # return {"userId": user.id, "addedTrack": trackId}, 200
-
 # FULL add like to track (USER + LIKED + PLAYLIST) -> All or nothing transaction
 @app.route('/users/<id>/addTrackFull/<trackId>', methods=['POST'])
 def add_liked_track_full(id, trackId):
@@ -278,28 +225,6 @@ def add_liked_track_full(id, trackId):
     track.likedBy = json.dumps(users)
     db.session.commit()
     return {"trackId": trackId, "user": userIdInt, "status": "POST SUCCESS"}, 200
-
-# Remove track from user's liked tracks
-@app.route('/users/<id>/removeTrack/<trackId>', methods=['DELETE'])
-def remove_liked_track(id, trackId):
-    user = User.query.get(id)
-    if user is None:
-        return {"Error": "User not found"}, 404
-    # Check if track already exists inside user's liked tracks
-    likedTracks = json.loads(user.likedTracks)
-    found = False
-    for likedId in likedTracks:
-        if likedId == trackId:
-            found = True
-            break
-    if found:
-        likedTracks.remove(trackId)
-        user.likedTracks = json.dumps(likedTracks)
-        db.session.commit()
-        return remove_like(trackId, id)
-        # return {"userId": user.id, "removedTrack": trackId}, 200
-    else:
-        return {"Error": "Could not remove. Track was not found on user likedTracks."}, 400
 
 # Remove track from user's liked tracks FULL
 @app.route('/users/<id>/removeTrackFull/<trackId>', methods=['DELETE'])
@@ -354,73 +279,43 @@ def get_all_liked():
 
     return {"likedTracks" : output}
 
-# Add a like from user
-@app.route('/liked/add/<trackId>/<userId>', methods=['POST'])
-def add_like(trackId, userId):
-    userIdInt = int(userId)
-    track = Liked.query.get(trackId)
-    if track is None:
-        # Create entry for this track
-        newTrack = Liked(id=trackId, likedBy="[]")
-        db.session.add(newTrack)
-        db.session.commit()
-        track = Liked.query.get(trackId)
-    # Add user to track's likedBy
-    users = json.loads(track.likedBy)
-    if userIdInt in users:
-        # User has already liked this song
-        return {"Error": "User has already liked this song"}, 400
-    users.append(userIdInt)
-    track.likedBy = json.dumps(users)
-    db.session.commit()
-    # Check if track needs to be added to playlist
-    if len(users) == majority:
-        return {"trackId": trackId, "user": userIdInt, "status": "SUCCESS + ADD TO PLAYLIST"}, 250
-    return {"trackId": trackId, "user": userIdInt, "status": "SUCCESS"}, 200
-
-# Remove a like from user
-@app.route('/liked/remove/<trackId>/<userId>', methods=['POST'])
-def remove_like(trackId, userId):
-    userIdInt = int(userId)
-    track = Liked.query.get(trackId)
-    if track is None:
-        return {"Error": "Track not found in liked tracks"}, 400
-    # Remove user from track's likedBy
-    users = json.loads(track.likedBy)
-    if userIdInt in users:
-        users.remove(userIdInt)
-        track.likedBy = json.dumps(users)
-        db.session.commit()
-        # Check if track needs to be removed from playlist
-        if len(users) == (majority - 1):
-            return {"trackId": trackId, "user": userIdInt, "status": "SUCCESS + REMOVE FROM PLAYLIST"}, 251
-        return {"trackId": trackId, "user": userIdInt, "status": "SUCCESS"}, 200
-    else:
-        # User had not previously liked this song
-        return {"Error": "User had not previously liked this song"}, 400
-
 ### AUTH
 
-# Get tokens
-@app.route('/auth/tokens')
-def get_tokens():
-    token = Auth.query.get(1)
-    if token is None:
-        return {"Error": "Tokens not found"}, 404
-    return {"accessToken": token.accessToken, "refreshToken": token.refreshToken}, 200
+def get_access_token():
+    currentAuthTokens = Auth.query.get(1)
+    if currentAuthTokens is None:
+        return -1
+    accessToken = currentAuthTokens.accessToken
+    refreshToken = currentAuthTokens.refreshToken
+    # Check if access token is alive
+    url = 'https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl'
+    headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return accessToken
+    # Get new acccess token
+    auth_message = clientId + ':' + clientSecret
+    auth_message_bytes = auth_message.encode('ascii')
+    base64_bytes = base64.b64encode(auth_message_bytes)
+    base64_auth_message = base64_bytes.decode('ascii')
+    url = 'https://accounts.spotify.com/api/token'
+    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + base64_auth_message}
+    payload = {'grant_type': 'refresh_token', 'refresh_token': refreshToken}
+    response = requests.post(url, headers=headers, params=payload)
+    if response.status_code == 200:
+        data = response.json()
+        newToken = data['access_token']
+        currentAuthTokens.accessToken = newToken
+        db.session.commit()
+        return newToken
+    else:
+        return -1
 
-# Set refresh token
-@app.route('/auth/refreshToken', methods=['POST'])
-def set_refresh_token():
-    token = Auth.query.get(1)
-    token.refreshToken = request.json['refreshToken']
-    db.session.commit()
-    return {'New refresh token': token.refreshToken}, 200
-
-# Set access token
-@app.route('/auth/accessToken', methods=['POST'])
-def set_access_token():
-    token = Auth.query.get(1)
-    token.accessToken = request.json['accessToken']
-    db.session.commit()
-    return {'New access token': token.accessToken}, 200
+# Get working token
+@app.route('/auth/accessToken')
+def get_active_access_token():
+    token = get_access_token()
+    if token != -1:
+        return {"accessToken": token}, 200
+    else:
+        return {"Error": "Could not retrieve valid access token"}, 400
