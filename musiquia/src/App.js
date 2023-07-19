@@ -5,6 +5,7 @@ import PlaylistTab from './components/PlaylistTab.js';
 import Menu from './components/Menu.js';
 import { useEffect, useState } from 'react';
 import { API_URL } from './Globals.js';
+import bcrypt from 'bcryptjs-react';
 
 function App() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
@@ -102,7 +103,7 @@ function App() {
     else {
       // Check if passwords match
       const data = await response.json();
-      if (data.password === hashCode(passInput).toString()) {
+      if (bcrypt.compareSync(passInput, data.password)) {
         console.log("Password matched!");
         setUser(data);
         // TODO: Softer animation to hide login screen (make a function for this)
@@ -111,12 +112,6 @@ function App() {
         errorDiv.innerHTML = "Wrong username / password";
       }
     }
-  }
-
-  function hashCode(str) {
-    for(var i = 0, h = 0; i < str.length; i++)
-        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-    return h;
   }
 
   async function requestNewToken() {
