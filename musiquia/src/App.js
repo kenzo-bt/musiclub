@@ -29,17 +29,13 @@ function App() {
           const data = await response.json();
           setUser(data);
         }
-        else if (response.status === 400){
-          console.log("Could not find a user for this cookie");
-          console.log("Cookie->" + cookieValue);
-        }
-        else {
-          console.log("Previous login cookie is no longer valid");
-        }
       }
-      else {
-        console.log("No login cookie found");
-      }
+      // Hide loading indicator
+      document.getElementById("cookieLoadingIcon").style.display = "none";
+      document.getElementById("processingCookies").style.opacity = 0;
+      setTimeout(() => {
+        document.getElementById("processingCookies").style.display = "none";
+      }, 1000)
     }
 
     async function getAccessToken() {
@@ -205,6 +201,16 @@ function App() {
 
   return (
     <div className="App">
+      <div id="processingCookies">
+        <div id="cookieLoadingIcon">
+          <div className="lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
       {
         user === undefined ?
           <div id="loginScreen">
