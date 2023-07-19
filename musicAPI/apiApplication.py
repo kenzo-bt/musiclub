@@ -44,6 +44,12 @@ class Liked(db.Model):
     id = db.Column(db.String(80), primary_key=True)
     likedBy = db.Column(db.Text)
 
+class Cookie(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    userId = db.Column(db.Integer, nullable=False)
+    os = db.Column(db.Text, nullable=False)
+    key = db.Column(db.Text, nullable=False)
+
 ###### GLOBALS
 
 playlistId = "3Z9UoDIlecIROC1I6HYG91"
@@ -177,6 +183,13 @@ def get_users():
 @app.route('/users/<name>')
 def get_user(name):
     user = User.query.filter_by(username=name).first()
+    if user is None:
+        return {"Error": "User not found"}, 404
+    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}, 200
+
+@app.route('/users/<id>')
+def get_user_by_id(id):
+    user = User.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
     return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}, 200
@@ -319,3 +332,33 @@ def get_active_access_token():
         return {"accessToken": token}, 200
     else:
         return {"Error": "Could not retrieve valid access token"}, 400
+
+### COOKIES
+
+# Set a cookie
+@app.route('/cookies/set/<id>/<value>', methods=['POST'])
+def set_login_cookie(id, value):
+    user = User.query.get(id)
+    if user is None:
+        return {"Error": "User not found"}, 400
+    operatingSystem = value.split(":")[0]
+    cookieKey = value.split(":")[1]
+    existingCookie = Cookie.query.filter_by(userId=id, os=operatingSystem).first()
+    if existingCookie is None:
+        cookie = Cookie(userId=id, os=operatingSystem, key=cookieKey)
+        db.session.add(cookie)
+        db.session.commit()
+        return {"User": id, "Cookie": value, "Action": "Cookie created"}, 200
+    else:
+        existingCookie.key = cookieKey
+        db.session.commit()
+        return {"User": id, "Cookie": value, "Action": "Cookie updated"}, 200
+
+@app.route('/cookies/login/<value>')
+def request_cookie_login(value):
+    operatingSystem = value.split(":")[0]
+    cookieKey = value.split(":")[1]
+    cookie = Cookie.query.filter_by(os=operatingSystem, key=cookieKey).first()
+    if cookie is None:
+        return {"Error": "No user associated with that cookie"}, 400
+    return get_user_by_id(cookie.userId)

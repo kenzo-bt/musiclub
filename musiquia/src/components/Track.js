@@ -16,7 +16,6 @@ function Track(props) {
     };
     const response = await fetch(API_URL + "users/" + props.userInfo.id + "/addTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
-      console.log("Added track to liked...");
       props.addLike(props.id);
       return true;
     }
@@ -34,7 +33,6 @@ function Track(props) {
     };
     const response = await fetch(API_URL + "users/" + props.userInfo.id + "/removeTrackFull/" + props.id, requestParameters);
     if (response.status === 200) {
-      console.log("Removed track from liked...");
       props.removeLike(props.id);
       return true;
     }
@@ -68,7 +66,6 @@ function Track(props) {
 
   function favouriteTrack(event) {
     event.stopPropagation();
-    console.log("Clicked on track " + props.name + " - ID: " + props.id);
     if (!processing) {
       toggleFavourite();
     }
@@ -77,7 +74,6 @@ function Track(props) {
   function togglePlay(event) {
     event.stopPropagation();
     let audioElement = document.getElementById("player-" + props.id);
-    console.log(audioElement);
     if (playing) {
       audioElement.pause();
       setPlaying(false);

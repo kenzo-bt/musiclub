@@ -17,7 +17,6 @@ function AlbumsTab({requestToken, userInfo}) {
       };
       const response = await fetch('https://myxos.online/musicAPI/users/' + username, queryParameters);
       if (response.status === 200) {
-        console.log("Fetched user likedTracks");
         const data = await response.json();
         setLikedTracks(data.likedTracks);
       }

@@ -13,14 +13,11 @@ function UserTab(props) {
     const response = await fetch("https://api.spotify.com/v1/me/playlists", requestParameters);
     if (response.status === 200) {
       const data = await response.json();
-      console.log(data);
     }
     else if (response.status === 401) {
       console.log("Access token has expired. Requesting new token...");
       const tokenRenewalSuccess = await props.onTokenExpiration();
       if (tokenRenewalSuccess) {
-        console.log("Token currently available to UserTab: " + props.requestToken());
-        console.log("Fetching user playlist again...");
         debugUserPlaylists();
       }
     }

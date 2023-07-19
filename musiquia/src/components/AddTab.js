@@ -18,8 +18,6 @@ function AddTab(props){
 
     if (searchQuery !== "" && searchQuery !== undefined)
     {
-      console.log("Initiate search with query: '"+ searchQuery +"'");
-      console.log("Local Token: " + getLocalToken());
       // Query headers for HTTP request to be sent to Spotify API
       var queryParameters = {
         method: 'GET',

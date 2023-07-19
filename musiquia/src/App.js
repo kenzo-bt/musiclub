@@ -5,6 +5,7 @@ import PlaylistTab from './components/PlaylistTab.js';
 import Menu from './components/Menu.js';
 import { useEffect, useState } from 'react';
 import { API_URL } from './Globals.js';
+import bcrypt from 'bcryptjs-react';
 
 function App() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
@@ -12,6 +13,31 @@ function App() {
 
   // useEffect will run only once when application loads
   useEffect(() => {
+    async function tryCookieLogin() {
+      // Check if cookie exists in browser
+      const cookieName = "loginRemember";
+      if (document.cookie.split(";").some((item) => item.trim().startsWith(cookieName + "="))) {
+        const cookieValue = document.cookie.split("; ").find((row) => row.startsWith(cookieName + "="))?.split("=")[1];
+        const params = {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+        const response = await fetch(API_URL + "cookies/login/" + cookieValue, params);
+        if (response.status === 200) {
+          const data = await response.json();
+          setUser(data);
+        }
+      }
+      // Hide loading indicator
+      document.getElementById("cookieLoadingIcon").style.display = "none";
+      document.getElementById("processingCookies").style.opacity = 0;
+      setTimeout(() => {
+        document.getElementById("processingCookies").style.display = "none";
+      }, 1000)
+    }
+
     async function getAccessToken() {
       const params = {
         method: 'GET',
@@ -22,13 +48,13 @@ function App() {
       const res = await fetch(API_URL + "auth/accessToken", params);
       if (res.status === 200) {
         const data = await res.json();
-        console.log("Fetched working token from server: " + data.accessToken);
         document.getElementById("spotifyToken").innerHTML = data.accessToken;
       }
       else {
         console.log("Error: Unable to fetch a working token from server");
       }
     }
+    tryCookieLogin();
     getAccessToken();
   }, []);
 
@@ -85,9 +111,34 @@ function App() {
     authenticateUser(username, password);
   }
 
+  function getRandomString() {
+    // Possibilites = 3.22 × 10^21 -> ~3 sextillion -> ~50K years to bruteforce
+    const keySpace = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const keyLength = 12;
+    let key = "";
+    for (let i = 0; i < keyLength; i++) {
+      key += keySpace.charAt(Math.floor(Math.random() * keySpace.length));
+    }
+    return key;
+  }
+
+  async function sendCookieToServer(userId, loginCookie) {
+    const requestParameters = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    const response = await fetch(API_URL + "cookies/set/" + userId + "/" + loginCookie, requestParameters);
+    if (response.status !== 200) {
+      console.log("Error: Unable to set cookie in server");
+    }
+  }
+
   async function authenticateUser(userInput, passInput) {
     const userLowerInput = userInput.toLowerCase();
     const errorDiv = document.getElementById("errorMessage");
+    const rememberMeSelected = document.getElementById("rememberLoginBox").checked;
     const requestParameters = {
       method: 'GET',
       headers: {
@@ -102,8 +153,18 @@ function App() {
     else {
       // Check if passwords match
       const data = await response.json();
-      if (data.password === hashCode(passInput).toString()) {
-        console.log("Password matched!");
+      if (bcrypt.compareSync(passInput, data.password)) {
+        // If user checked the "Remember this device" checkbox, create cookie and send to server
+        if (rememberMeSelected) {
+          const userAgent = window.navigator.userAgent;
+          const os = userAgent.slice(userAgent.indexOf("(") + 1, userAgent.indexOf(";"));
+          const newCookie = encodeURIComponent(os) + ":" + getRandomString();
+          const cookieTime = 30 * 24 * 60 * 60; // 30 days
+          document.cookie = "loginRemember=" + newCookie + "; SameSite=None; max-age=" + cookieTime + "; Secure";
+          const cookieValue = document.cookie.split("; ").find((row) => row.startsWith("loginRemember="))?.split("=")[1];
+          sendCookieToServer(data.id, cookieValue);
+        }
+        // Set the user data as state
         setUser(data);
         // TODO: Softer animation to hide login screen (make a function for this)
       }
@@ -111,12 +172,6 @@ function App() {
         errorDiv.innerHTML = "Wrong username / password";
       }
     }
-  }
-
-  function hashCode(str) {
-    for(var i = 0, h = 0; i < str.length; i++)
-        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-    return h;
   }
 
   async function requestNewToken() {
@@ -129,7 +184,6 @@ function App() {
     const res = await fetch(API_URL + "auth/accessToken", params);
     if (res.status === 200) {
       const data = await res.json();
-      console.log("Fetched working token from server: " + data.accessToken);
       document.getElementById("spotifyToken").innerHTML = data.accessToken;
       return true;
     }
@@ -141,6 +195,16 @@ function App() {
 
   return (
     <div className="App">
+      <div id="processingCookies">
+        <div id="cookieLoadingIcon">
+          <div className="lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
       {
         user === undefined ?
           <div id="loginScreen">
@@ -150,6 +214,10 @@ function App() {
               <input id="usernameInput" className="textInput" type="text" placeholder="Username"></input>
               <input id="passwordInput" className="textInput" type="password" placeholder="Password"></input>
               <button id="submitLogin" className="submitButton" onClick={validateCredentials}>Login</button>
+              <div className="rememberMeContainer">
+                <input type="checkbox" id="rememberLoginBox" name="rememberMe" />
+                <label for="rememberMe">Remember this device</label>
+              </div>
               <div id="errorMessage"></div>
             </div>
           </div>
