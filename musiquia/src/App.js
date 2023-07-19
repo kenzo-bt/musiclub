@@ -13,6 +13,35 @@ function App() {
 
   // useEffect will run only once when application loads
   useEffect(() => {
+    async function tryCookieLogin() {
+      // Check if cookie exists in browser
+      const cookieName = "loginRemember";
+      if (document.cookie.split(";").some((item) => item.trim().startsWith(cookieName + "="))) {
+        const cookieValue = document.cookie.split("; ").find((row) => row.startsWith(cookieName + "="))?.split("=")[1];
+        const params = {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+        const response = await fetch(API_URL + "cookies/login/" + cookieValue, params);
+        if (response.status === 200) {
+          const data = await response.json();
+          setUser(data);
+        }
+        else if (response.status === 400){
+          console.log("Could not find a user for this cookie");
+          console.log("Cookie->" + cookieValue);
+        }
+        else {
+          console.log("Previous login cookie is no longer valid");
+        }
+      }
+      else {
+        console.log("No login cookie found");
+      }
+    }
+
     async function getAccessToken() {
       const params = {
         method: 'GET',
@@ -30,6 +59,7 @@ function App() {
         console.log("Error: Unable to fetch a working token from server");
       }
     }
+    tryCookieLogin();
     getAccessToken();
   }, []);
 
@@ -86,9 +116,37 @@ function App() {
     authenticateUser(username, password);
   }
 
+  function getRandomString() {
+    // Possibilites = 3.22 × 10^21 -> ~3 sextillion -> ~50K years to bruteforce
+    const keySpace = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const keyLength = 12;
+    let key = "";
+    for (let i = 0; i < keyLength; i++) {
+      key += keySpace.charAt(Math.floor(Math.random() * keySpace.length));
+    }
+    return key;
+  }
+
+  async function sendCookieToServer(userId, loginCookie) {
+    const requestParameters = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    const response = await fetch(API_URL + "cookies/set/" + userId + "/" + loginCookie, requestParameters);
+    if (response.status === 200) {
+      console.log("Cookie set successfully in server");
+    }
+    else {
+      console.log("Unable to set cookie in server");
+    }
+  }
+
   async function authenticateUser(userInput, passInput) {
     const userLowerInput = userInput.toLowerCase();
     const errorDiv = document.getElementById("errorMessage");
+    const rememberMeSelected = document.getElementById("rememberLoginBox").checked;
     const requestParameters = {
       method: 'GET',
       headers: {
@@ -104,7 +162,18 @@ function App() {
       // Check if passwords match
       const data = await response.json();
       if (bcrypt.compareSync(passInput, data.password)) {
-        console.log("Password matched!");
+        // If user checked the "Remember this device" checkbox, create cookie and send to server
+        if (rememberMeSelected) {
+          const userAgent = window.navigator.userAgent;
+          const os = userAgent.slice(userAgent.indexOf("(") + 1, userAgent.indexOf(";"));
+          const newCookie = encodeURIComponent(os) + ":" + getRandomString();
+          const cookieTime = 30 * 24 * 60 * 60; // 30 days
+          document.cookie = "loginRemember=" + newCookie + "; SameSite=None; max-age=" + cookieTime + "; Secure";
+          const cookieValue = document.cookie.split("; ").find((row) => row.startsWith("loginRemember="))?.split("=")[1];
+          console.log("loginRemember cookie value:" + cookieValue);
+          sendCookieToServer(data.id, cookieValue);
+        }
+        // Set the user data as state
         setUser(data);
         // TODO: Softer animation to hide login screen (make a function for this)
       }
@@ -145,6 +214,10 @@ function App() {
               <input id="usernameInput" className="textInput" type="text" placeholder="Username"></input>
               <input id="passwordInput" className="textInput" type="password" placeholder="Password"></input>
               <button id="submitLogin" className="submitButton" onClick={validateCredentials}>Login</button>
+              <div className="rememberMeContainer">
+                <input type="checkbox" id="rememberLoginBox" name="rememberMe" />
+                <label for="rememberMe">Remember this device</label>
+              </div>
               <div id="errorMessage"></div>
             </div>
           </div>
