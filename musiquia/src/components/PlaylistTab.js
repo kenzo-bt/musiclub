@@ -30,7 +30,7 @@ function PlaylistTab({requestToken}) {
         }
       }
       else {
-        console.log("Unable to retrieve playlist from spotify API");
+        console.log("Error: Unable to retrieve playlist from spotify API");
       }
     }
     getPlaylist();

@@ -89,7 +89,7 @@ h2 {
   margin-left: auto;
   margin-right: auto;
   height: 100vh;
-  width: 100vw; /* Need a specific value to work */
+  width: 100vw;
   background-color: rgba(0,0,0,0.6);
   display: none;
   align-items: center;

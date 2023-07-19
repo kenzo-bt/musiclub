@@ -20,11 +20,9 @@ function Record(props) {
 
   async function toggleTracks(event) {
     if (tracksVisible) {
-      console.log("Hiding tracks...");
       setTracksVisible(false);
     }
     else {
-      console.log("Showing tracks...");
       setTracksVisible(true);
     }
   }
@@ -40,7 +38,6 @@ function Record(props) {
     const response = await fetch("https://api.spotify.com/v1/albums/" + props.albumID + "/tracks", queryParameters);
     if (response.status === 200) {
       const data = await response.json();
-      console.log(data.items);
       const tracks = data.items.map(track => ({"name": track.name, "id": track.id, "preview": track.preview_url}));
       return tracks;
     }
@@ -52,7 +49,7 @@ function Record(props) {
       }
     }
     else {
-      console.log("Couldnt fetch album tracks from spotify API");
+      console.log("Error: Couldnt fetch album tracks from spotify API");
       return false;
     }
   }
@@ -60,13 +57,11 @@ function Record(props) {
   async function addAlbum(event) {
     const albumID = props.albumID;
     if (albumID !== "" && albumID !== undefined) {
-      console.log("Add '" + props.name + "' to selected albums");
       // Activate loading indicator
       showLoadingIndicator(event.target);
       // Fetch the album from spotify API to get tracklist information
       const retrievedTracks = await fetchTracklist();
       if (retrievedTracks) {
-        console.log(retrievedTracks);
         // Add album to database
         const requestParameters = {
           method: 'POST',
@@ -91,7 +86,6 @@ function Record(props) {
               showAlert("Error", "Album already exists in listening queue");
             }
             else {
-              console.log("Album successfully added!");
               showSuccessIndicator(event.target);
             }
             hideLoadingIndicator(event.target);
@@ -157,7 +151,6 @@ function Record(props) {
     }
     const res = await fetch(API_URL + "selectedAlbums/" + props.albumID, params);
     if (res.status === 200) {
-      console.log("Album successfully deleted");
       setHidden(true);
     }
     else {

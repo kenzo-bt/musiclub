@@ -48,7 +48,6 @@ function App() {
       const res = await fetch(API_URL + "auth/accessToken", params);
       if (res.status === 200) {
         const data = await res.json();
-        console.log("Fetched working token from server: " + data.accessToken);
         document.getElementById("spotifyToken").innerHTML = data.accessToken;
       }
       else {
@@ -131,11 +130,8 @@ function App() {
       }
     };
     const response = await fetch(API_URL + "cookies/set/" + userId + "/" + loginCookie, requestParameters);
-    if (response.status === 200) {
-      console.log("Cookie set successfully in server");
-    }
-    else {
-      console.log("Unable to set cookie in server");
+    if (response.status !== 200) {
+      console.log("Error: Unable to set cookie in server");
     }
   }
 
@@ -166,7 +162,6 @@ function App() {
           const cookieTime = 30 * 24 * 60 * 60; // 30 days
           document.cookie = "loginRemember=" + newCookie + "; SameSite=None; max-age=" + cookieTime + "; Secure";
           const cookieValue = document.cookie.split("; ").find((row) => row.startsWith("loginRemember="))?.split("=")[1];
-          console.log("loginRemember cookie value:" + cookieValue);
           sendCookieToServer(data.id, cookieValue);
         }
         // Set the user data as state
@@ -189,7 +184,6 @@ function App() {
     const res = await fetch(API_URL + "auth/accessToken", params);
     if (res.status === 200) {
       const data = await res.json();
-      console.log("Fetched working token from server: " + data.accessToken);
       document.getElementById("spotifyToken").innerHTML = data.accessToken;
       return true;
     }
