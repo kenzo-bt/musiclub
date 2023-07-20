@@ -185,6 +185,8 @@ function Record(props) {
                     requestToken={props.requestToken}
                     addLike={props.addLike}
                     removeLike={props.removeLike}
+                    playTrack={props.playTrack}
+                    pauseTrack={props.pauseTrack}
                   />
                 );
               })
