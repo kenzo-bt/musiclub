@@ -71,15 +71,18 @@ function Track(props) {
     }
   }
 
+  function resetPlayButton() {
+    setPlaying(false);
+  }
+
   function togglePlay(event) {
     event.stopPropagation();
-    let audioElement = document.getElementById("player-" + props.id);
     if (playing) {
-      audioElement.pause();
+      props.pauseTrack();
       setPlaying(false);
     }
     else {
-      audioElement.play();
+      props.playTrack(props.preview, resetPlayButton);
       setPlaying(true);
     }
   }
@@ -90,13 +93,7 @@ function Track(props) {
       <div className="trackButtons">
         {
           props.preview !== "" && props.preview !== undefined && props.preview !== null ?
-            <audio preload="none" src={props.preview} id={"player-" + props.id}></audio>
-          :
-            ""
-        }
-        {
-          props.preview !== "" && props.preview !== undefined && props.preview !== null ?
-            <img className="playButton" src={"" + (playing ? "pause" : "play") + ".png"} alt="player icon" onClick={togglePlay} />
+            <img className="playButton" src={"" + (playing ? "pause" : "play") + ".png"} alt={(playing ? "pause" : "play") + " icon"} onClick={togglePlay} />
           :
             ""
         }

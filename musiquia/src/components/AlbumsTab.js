@@ -5,6 +5,7 @@ import './AlbumsTab.css';
 function AlbumsTab({requestToken, userInfo}) {
   const [albums, setAlbums] = useState([]);
   const [likedTracks, setLikedTracks] = useState([]);
+  let trackPlayCallback = undefined;
 
   useEffect(() => {
     async function fetchUserLikes() {
@@ -56,6 +57,33 @@ function AlbumsTab({requestToken, userInfo}) {
     setLikedTracks(updatedLiked);
   }
 
+  function playTrack(src, callback) {
+    const player = document.getElementById("audioPlayer");
+    if (player.src === src) {
+      player.play();
+    }
+    else {
+      if (trackPlayCallback !== undefined) {
+        trackPlayCallback();
+      }
+      trackPlayCallback = callback;
+      player.pause();
+      player.src = src;
+      player.play();
+    }
+  }
+
+  function pauseTrack() {
+    const player = document.getElementById("audioPlayer");
+    player.pause();
+  }
+
+  function handleAudioEnd() {
+    if (trackPlayCallback !== undefined) {
+      trackPlayCallback();
+    }
+  }
+
   return (
     <div className="Tab container" id="albumsTab">
       <div className="tabContent centered">
@@ -75,9 +103,12 @@ function AlbumsTab({requestToken, userInfo}) {
               isTrackLiked={isTrackLiked}
               addLike={addLikedTrack}
               removeLike={removeLikedTrack}
+              playTrack={playTrack}
+              pauseTrack={pauseTrack}
             />
           );
         })}
+        <audio preload="none" src="https://p.scdn.co/mp3-preview/b4c682084c3fd05538726d0a126b7e14b6e92c83?cid=9cb9b55a9f4f402a8a250030f7c35468" id="audioPlayer" onEnded={handleAudioEnd}></audio>
       </div>
     </div>
   );
