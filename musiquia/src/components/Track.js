@@ -93,11 +93,11 @@ function Track(props) {
       <div className="trackButtons">
         {
           props.preview !== "" && props.preview !== undefined && props.preview !== null ?
-            <img className="playButton" src={"" + (playing ? "pause" : "play") + ".png"} alt={(playing ? "pause" : "play") + " icon"} onClick={togglePlay} />
+            <img className="playButton" src={require('../Images/' + (playing ? "pause" : "play") + ".png")} alt={(playing ? "pause" : "play") + " icon"} onClick={togglePlay} />
           :
             ""
         }
-        <img className={"likeButton" + (processing ? " processing" : "")} src={"star" + (isLiked ? "Select" : "") + ".png"} alt={isLiked ? "liked" : "unlike"} onClick={favouriteTrack} />
+        <img className={"likeButton" + (processing ? " processing" : "")} src={require('../Images/star' + (isLiked ? "Select" : "") + ".png")} alt={isLiked ? "liked" : "unlike"} onClick={favouriteTrack} />
       </div>
     </div>
   );
