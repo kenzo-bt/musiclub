@@ -201,7 +201,7 @@ function Record(props) {
         props.userInfo !== undefined && props.ownerID === props.userInfo.id ?
           <div className="deleteAlbum">
             <button className="deleteAlbumButton" onClick={handleDeleteAlbum}>
-              <img className="deleteAlbumImage" src="trash.png" alt="delete icon" />
+              <img className="deleteAlbumImage" src={require("../Images/trash.png")} alt="delete icon" />
             </button>
           </div>
         :
