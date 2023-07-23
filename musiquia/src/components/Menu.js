@@ -4,9 +4,9 @@ function Menu(props) {
   return (
     <div className="Menu">
       <div className="menuButtonContainer">
-        <MenuButton text="Albums" img={require("../Images/musical-note.png")} clickHandler={() => props.onButtonClick(0)} />
-        <MenuButton text="Add" img={require("../Images/more.png")} clickHandler={() => props.onButtonClick(1)} />
-        <MenuButton text="Playlist" img={require("../Images/playlist.png")} clickHandler={() => props.onButtonClick(2)} />
+        <MenuButton text="Albums" img={require("../images/musical-note.png")} clickHandler={() => props.onButtonClick(0)} />
+        <MenuButton text="Add" img={require("../images/more.png")} clickHandler={() => props.onButtonClick(1)} />
+        <MenuButton text="Playlist" img={require("../images/playlist.png")} clickHandler={() => props.onButtonClick(2)} />
       </div>
     </div>
   );

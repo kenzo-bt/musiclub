@@ -201,7 +201,7 @@ function Record(props) {
         props.userInfo !== undefined && props.ownerID === props.userInfo.id ?
           <div className="deleteAlbum">
             <button className="deleteAlbumButton" onClick={handleDeleteAlbum}>
-              <img className="deleteAlbumImage" src={require("../Images/trash.png")} alt="delete icon" />
+              <img className="deleteAlbumImage" src={require("../images/trash.png")} alt="delete icon" />
             </button>
           </div>
         :
@@ -216,7 +216,7 @@ function Record(props) {
         </div>
       </div>
       <div className="successIndicator">
-        <img src="check.png" alt="success icon" />
+        <img src={require("../images/check.png")} alt="success icon" />
       </div>
     </div>
   );

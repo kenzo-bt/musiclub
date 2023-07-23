@@ -209,7 +209,7 @@ function App() {
         user === undefined ?
           <div id="loginScreen">
             <div className="loginContainer">
-              <img className="loginLogo" src={require("./Images/vinyl.png")} alt="app logo" />
+              <img className="loginLogo" src={require("./images/vinyl.png")} alt="app logo" />
               <div className="loginSeparator"></div>
               <input id="usernameInput" className="textInput" type="text" placeholder="Username"></input>
               <input id="passwordInput" className="textInput" type="password" placeholder="Password"></input>
