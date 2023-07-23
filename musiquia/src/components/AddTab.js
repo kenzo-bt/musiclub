@@ -51,7 +51,7 @@ function AddTab(props){
         <div className="searchBar">
           <input id="searchBarInput" className="searchInput" type="text" placeholder="Search for an album ..." onKeyDown={handleInputEnter} />
           <button type="button" onClick={initiateSearch}>
-            <img src="search.png" alt="search icon" />
+            <img src={require("../images/search.png")} alt="search icon" />
           </button>
         </div>
         {albums.map((album, i) => {

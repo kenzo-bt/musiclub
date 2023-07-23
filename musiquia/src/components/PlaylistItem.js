@@ -23,7 +23,7 @@ function PlaylistItem(props) {
       <div className="playlistTrackName">{props.trackName}</div>
       {
          props.preview !== undefined && props.preview !== null && props.preview !== "" ?
-          <img className="playButton" src={"" + (playing ? "pause" : "play") + ".png"} alt="player icon" onClick={togglePlay} />
+          <img className="playButton" src={require("../images/" + (playing ? "pause" : "play") + ".png")} alt="player icon" onClick={togglePlay} />
          :
           ""
       }
