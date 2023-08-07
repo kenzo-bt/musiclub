@@ -16,8 +16,6 @@ function Track(props) {
       if (user === 8 && props.userInfo.username !== "fernando") {names.push("Fernando")};
     });
   }
-
-  console.log(names)
   
   async function addTrackToLiked() {
     const requestParameters = {
