@@ -5,6 +5,7 @@ import './AlbumsTab.css';
 function AlbumsTab({requestToken, userInfo}) {
   const [albums, setAlbums] = useState([]);
   const [likedTracks, setLikedTracks] = useState([]);
+  const [otherUsersLiked, setOtherUsersLiked] = useState([]);
   let trackPlayCallback = undefined;
 
   useEffect(() => {
@@ -35,10 +36,24 @@ function AlbumsTab({requestToken, userInfo}) {
       setAlbums(data.albums);
     }
 
+    // Request Json file with list of tracks and which user liked each trach
+    async function fetchOtherLikes() {
+      const queryParameters = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+      const response = await fetch('https://myxos.online/musicAPI/liked', queryParameters);
+      const data = await response.json();
+      setOtherUsersLiked(data.likedTracks);
+    }
+
     fetchAlbums();
     if (userInfo !== undefined && userInfo !== null) {
       fetchUserLikes();
     }
+    fetchOtherLikes();
   }, [userInfo]);
 
   function isTrackLiked(trackId) {
@@ -84,6 +99,8 @@ function AlbumsTab({requestToken, userInfo}) {
     }
   }
 
+//console.log(otherUsersLiked)
+
   return (
     <div className="Tab container" id="albumsTab">
       <div className="tabContent centered">
@@ -105,6 +122,7 @@ function AlbumsTab({requestToken, userInfo}) {
               removeLike={removeLikedTrack}
               playTrack={playTrack}
               pauseTrack={pauseTrack}
+              otherLikes={otherUsersLiked}
             />
           );
         })}
