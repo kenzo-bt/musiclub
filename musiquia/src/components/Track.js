@@ -8,22 +8,17 @@ function Track(props) {
   const [isLiked, setIsLiked] = useState(props.liked);
 
   const names = [];
-  const userIds = props.otherLikes[0].likedBy;
-  // console.log(userIds)
-
-
-  // I have a Json with the user id of who liked the track, need to convert to an array of names.
-  //This would have been better if I had a table with users ands IDs, maybe will try to refactor in the future
-
-   userIds.forEach(user => {
+  if (props.otherLikes[0] !== undefined){
+    props.otherLikes[0].likedBy.forEach(user => {
       if (user === 2 && props.userInfo.username !== "kenzo") {names.push("Kenzo")};
       if (user === 6 && props.userInfo.username !== "nicolas") {names.push("Nicolas")};
       if (user === 7 && props.userInfo.username !== "esteban") {names.push("Esteban")};
       if (user === 8 && props.userInfo.username !== "fernando") {names.push("Fernando")};
     });
+  }
 
+  console.log(names)
   
-
   async function addTrackToLiked() {
     const requestParameters = {
       method: 'POST',
@@ -115,7 +110,7 @@ function Track(props) {
             ""
         }
         <img className={"likeButton" + (processing ? " processing" : "")} src={require("../images/star" + (isLiked ? "Select" : "") + ".png")} alt={isLiked ? "liked" : "unlike"} onClick={favouriteTrack} />
-        <div className='otherUserLikes'> <p>Also liked by: <br></br>{names[0] && names[0]} {names[1] && names[1]} {names[2] && names[2]}</p></div>
+        <div className='otherUserLikes'>{names.length > 0 && 'Also liked by'}<br></br>{names.join(', ')}</div>
       </div>
     </div>
   );
