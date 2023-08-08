@@ -93,7 +93,7 @@ def removeFromPlaylist(trackId):
     if accessToken == -1:
         return False
     else:
-        # Add to Playlist
+        # Delete from Playlist
         url = 'https://api.spotify.com/v1/playlists/' + playlistId + '/tracks'
         headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
         payload = {'tracks': [{'uri': 'spotify:track:' + trackId}]}
