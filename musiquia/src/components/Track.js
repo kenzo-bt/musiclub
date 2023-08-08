@@ -16,7 +16,7 @@ function Track(props) {
       if (user === 8 && props.userInfo.username !== "fernando") {names.push("Fernando")};
     });
   }
-  
+
   async function addTrackToLiked() {
     const requestParameters = {
       method: 'POST',
@@ -103,12 +103,29 @@ function Track(props) {
       <div className="trackButtons">
         {
           props.preview !== "" && props.preview !== undefined && props.preview !== null ?
-            <img className="playButton" src={require("../images/" + (playing ? "pause" : "play") + ".png")} alt={(playing ? "pause" : "play") + " icon"} onClick={togglePlay} />
+            <img
+              className="playButton"
+              src={require("../images/" + (playing ? "pause" : "play") + ".png")}
+              alt={(playing ? "pause" : "play") + " icon"}
+              onClick={togglePlay}
+            />
           :
             ""
         }
-        <img className={"likeButton" + (processing ? " processing" : "")} src={require("../images/star" + (isLiked ? "Select" : "") + ".png")} alt={isLiked ? "liked" : "unlike"} onClick={favouriteTrack} />
-        <div className='otherUserLikes'>{names.length > 0 && 'Also liked by'}<br></br>{names.join(', ')}</div>
+        <img
+          className={"likeButton" + (processing ? " processing" : "")}
+          src={require("../images/star" + (isLiked ? "Select" : "") + ".png")}
+          alt={isLiked ? "liked" : "unlike"}
+          onClick={favouriteTrack}
+        />
+        <div className="otherLikes">
+          <img
+            className="otherLikesStars"
+            src={require("../images/stars-" + names.length + ".png")}
+            alt={names.length + " stars symbol"}
+            title={names.join(", ")}
+          />
+        </div>
       </div>
     </div>
   );
