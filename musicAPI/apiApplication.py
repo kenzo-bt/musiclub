@@ -55,7 +55,8 @@ class Cookie(db.Model):
 playlistId = "3Z9UoDIlecIROC1I6HYG91"
 clientId = "9cb9b55a9f4f402a8a250030f7c35468"
 clientSecret = "e7a704cc2a4341279936c2feaee4cbe6"
-majority = 3
+majority = 2
+invalidUsers = [8]
 
 ###### FUNCTIONS
 
@@ -101,6 +102,13 @@ def removeFromPlaylist(trackId):
         if response.status_code == 200:
             return True
         return False
+
+def validUserCount(users):
+    count = 0
+    for user in users:
+        if user not in invalidUsers:
+            count += 1
+    return count
 
 ###### ROUTES
 
@@ -224,7 +232,7 @@ def add_liked_track_full(id, trackId):
         track = Liked.query.get(trackId)
     # Check if track needs to be added to playlist
     users = json.loads(track.likedBy)
-    if len(users) == (majority - 1):
+    if user.id not in invalidUsers and validUserCount(users) == (majority - 1):
         # Add to playlist
         addSuccess = addToPlaylist(trackId)
         if addSuccess == False:
@@ -255,7 +263,7 @@ def remove_liked_track_full(id, trackId):
     if found:
         track = Liked.query.get(trackId)
         users = json.loads(track.likedBy)
-        if len(users) == majority:
+        if user.id not in invalidUsers and validUserCount(users) == majority:
             removeSuccess = removeFromPlaylist(trackId)
             if removeSuccess == False:
                 return {"Error": "Unable to remove track from playlist"}, 400
