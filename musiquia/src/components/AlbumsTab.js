@@ -10,18 +10,17 @@ function AlbumsTab({requestToken, userInfo}) {
 
   useEffect(() => {
     async function fetchUserLikes() {
-      const username = userInfo.username;
       const queryParameters = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         }
       };
-      const response = await fetch('https://myxos.online/musicAPI/users/' + username, queryParameters);
-      if (response.status === 200) {
-        const data = await response.json();
-        setLikedTracks(data.likedTracks);
-      }
+      const response = await fetch('https://myxos.online/musicAPI/liked', queryParameters);
+      const data = await response.json();
+      setOtherUsersLiked(data.likedTracks);
+      const userLikes = data.likedTracks.filter(track => track.likedBy.includes(userInfo.id));
+      setLikedTracks(userLikes.map(track => track.id));
     }
 
     async function fetchAlbums() {
@@ -36,24 +35,10 @@ function AlbumsTab({requestToken, userInfo}) {
       setAlbums(data.albums);
     }
 
-    // Request Json file with list of tracks and which user liked each track
-    async function fetchOtherLikes() {
-      const queryParameters = {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-      const response = await fetch('https://myxos.online/musicAPI/liked', queryParameters);
-      const data = await response.json();
-      setOtherUsersLiked(data.likedTracks);
-    }
-
     fetchAlbums();
     if (userInfo !== undefined && userInfo !== null) {
       fetchUserLikes();
     }
-    fetchOtherLikes();
   }, [userInfo]);
 
   function isTrackLiked(trackId) {
