@@ -36,7 +36,7 @@ function AlbumsTab({requestToken, userInfo}) {
       setAlbums(data.albums);
     }
 
-    // Request Json file with list of tracks and which user liked each trach
+    // Request Json file with list of tracks and which user liked each track
     async function fetchOtherLikes() {
       const queryParameters = {
         method: 'GET',
@@ -98,8 +98,6 @@ function AlbumsTab({requestToken, userInfo}) {
       trackPlayCallback();
     }
   }
-
-//console.log(otherUsersLiked)
 
   return (
     <div className="Tab container" id="albumsTab">

@@ -10,9 +10,6 @@ function Record(props) {
   let imageClass = "recordImage";
   let infoClass = "recordInfo";
 
-  //console.log(props.otherLikes)
-
-
   if (props.viewMode === "Search")
   {
     containerClass += "Search";
@@ -177,7 +174,7 @@ function Record(props) {
             props.tracks !== undefined ?
               props.tracks.map(track => {
                 const isLiked = props.isTrackLiked(track.id);
-                const likesByUsers = props.otherLikes.filter( (otherLikes) => otherLikes.id.includes(track.id) )
+                const likesByUsers = props.otherLikes.filter(otherLikes => otherLikes.id.includes(track.id))
                 return (
                   <Track
                     name={track.name}
