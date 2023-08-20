@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, createContext } from 'react';
 import Record from './Record.js';
 import './AlbumsTab.css';
+import { AlbumCountContext } from './AlbumCountContext.js';
 
 function AlbumsTab({requestToken, userInfo}) {
   const [albums, setAlbums] = useState([]);
   const [likedTracks, setLikedTracks] = useState([]);
   const [otherUsersLiked, setOtherUsersLiked] = useState([]);
+  const {setUserAlbumCount} = useContext(AlbumCountContext);
+  
   let trackPlayCallback = undefined;
 
   useEffect(() => {

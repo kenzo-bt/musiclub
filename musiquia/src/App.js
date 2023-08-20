@@ -3,13 +3,16 @@ import AddTab from './components/AddTab.js';
 import AlbumsTab from './components/AlbumsTab.js';
 import PlaylistTab from './components/PlaylistTab.js';
 import Menu from './components/Menu.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, createContext, useContext } from 'react';
 import { API_URL } from './Globals.js';
 import bcrypt from 'bcryptjs-react';
+
+const AlbumContext = createContext({Kenzo: 0, Esteban: 0, Nicolas: 0});
 
 function App() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [user, setUser] = useState(undefined);
+  const [userAlbumCount, setUserAlbumCount] = useState({AlbumContext});
 
   // useEffect will run only once when application loads
   useEffect(() => {
@@ -231,10 +234,14 @@ function App() {
           <button className="alertButton" onClick={hideAlert}>OK</button>
         </div>
       </div>
+      
       { activeTabIndex === 0 ?
+      <AlbumContext.Provider value={{userAlbumCount, setUserAlbumCount}}>
           <AlbumsTab requestToken={requestNewToken} userInfo={user} />
+      </AlbumContext.Provider>
         : ''
       }
+     
       { activeTabIndex === 1 ?
           <AddTab requestToken={requestNewToken} userInfo={user} />
         : ''
