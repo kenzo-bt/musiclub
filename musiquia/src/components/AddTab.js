@@ -6,6 +6,8 @@ import './AddTab.css';
 function AddTab(props){
   const [albums, setAlbums] = useState([]);
 
+  console.log(props.albumOrder)
+
   function handleInputEnter (event) {
     if (event.key === "Enter")
     {

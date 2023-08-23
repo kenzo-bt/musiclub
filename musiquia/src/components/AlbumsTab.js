@@ -1,13 +1,11 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import Record from './Record.js';
 import './AlbumsTab.css';
-import { AlbumCountContext } from './AlbumCountContext.js';
 
-function AlbumsTab({requestToken, userInfo}) {
+function AlbumsTab({requestToken, userInfo, setAlbumOrder}) {
   const [albums, setAlbums] = useState([]);
   const [likedTracks, setLikedTracks] = useState([]);
   const [otherUsersLiked, setOtherUsersLiked] = useState([]);
-  const {setUserAlbumCount} = useContext(AlbumCountContext);
   
   let trackPlayCallback = undefined;
 
@@ -36,6 +34,17 @@ function AlbumsTab({requestToken, userInfo}) {
       const response = await fetch('https://myxos.online/musicAPI/selectedAlbums', queryParameters);
       const data = await response.json();
       setAlbums(data.albums);
+
+      let kenzoCount = 0, nicolasCount = 0, estebanCount = 0;
+
+      data.albums.forEach(album => {
+          if (album.ownerID == 2){kenzoCount++};
+          if (album.ownerID == 6){nicolasCount++};
+          if (album.ownerID == 7){estebanCount++};
+      })
+  
+      setAlbumOrder({kenzo: kenzoCount, nicolas: nicolasCount, esteban: estebanCount});
+
     }
 
     fetchAlbums();
