@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, createContext } from 'react';
 import Record from './Record.js';
 import './AlbumsTab.css';
 
-function AlbumsTab({requestToken, userInfo, setAlbumOrder}) {
+function AlbumsTab({requestToken, userInfo, setUserAlbumCount, setAlbumOrder}) {
   const [albums, setAlbums] = useState([]);
   const [likedTracks, setLikedTracks] = useState([]);
   const [otherUsersLiked, setOtherUsersLiked] = useState([]);
@@ -35,17 +35,44 @@ function AlbumsTab({requestToken, userInfo, setAlbumOrder}) {
       const data = await response.json();
       setAlbums(data.albums);
 
+      // Count how many albums each user has posted
       let kenzoCount = 0, nicolasCount = 0, estebanCount = 0;
-
       data.albums.forEach(album => {
           if (album.ownerID == 2){kenzoCount++};
           if (album.ownerID == 6){nicolasCount++};
           if (album.ownerID == 7){estebanCount++};
       })
-  
-      setAlbumOrder({kenzo: kenzoCount, nicolas: nicolasCount, esteban: estebanCount});
 
+      //return the index of the album object when it finds it by OwnderID
+      function FindLastPost(id){
+        const indexArray = [...data.albums];
+        const index = indexArray.reverse().findIndex(obj => obj.ownerID === id);
+        return index + 1;
+      }
+
+      setAlbumOrder(
+        [
+          {
+            "name": "kenzo",
+            "ownerID": 2,
+            "albumCount": kenzoCount,
+            "turn": FindLastPost(2)
+          },
+          {
+            "name": "nicolas",
+            "ownerID": 6,
+            "albumCount": nicolasCount,
+            "turn": FindLastPost(6)
+          },
+          {
+            "name": "esteban",
+            "ownerID": 7,
+            "albumCount": estebanCount,
+            "turn": FindLastPost(7)
+          },
+        ])
     }
+
 
     fetchAlbums();
     if (userInfo !== undefined && userInfo !== null) {

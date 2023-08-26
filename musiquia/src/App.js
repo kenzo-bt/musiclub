@@ -11,7 +11,6 @@ function App() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [user, setUser] = useState(undefined);
   const [albumOrder, setAlbumOrder] = useState({})
-  
 
   // useEffect will run only once when application loads
   useEffect(() => {
