@@ -10,7 +10,7 @@ import bcrypt from 'bcryptjs-react';
 function App() {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [user, setUser] = useState(undefined);
-  const [albumOrder, setAlbumOrder] = useState({})
+  const [userTurn, setUserTurn] = useState([]);
 
   // useEffect will run only once when application loads
   useEffect(() => {
@@ -234,12 +234,12 @@ function App() {
       </div>
       
       { activeTabIndex === 0 ?
-          <AlbumsTab requestToken={requestNewToken} userInfo={user} setAlbumOrder={setAlbumOrder} />
+          <AlbumsTab requestToken={requestNewToken} userInfo={user} setUserTurn={setUserTurn} />
         : ''
       }
      
       { activeTabIndex === 1 ?
-          <AddTab requestToken={requestNewToken} userInfo={user} albumOrder={albumOrder}/>
+          <AddTab requestToken={requestNewToken} userInfo={user} userTurn={userTurn}/>
         : ''
       }
       { activeTabIndex === 2 ?

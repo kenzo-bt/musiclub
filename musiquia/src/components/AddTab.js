@@ -1,29 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Record from './Record.js';
 import { getLocalToken } from '../Globals.js';
 import './AddTab.css';
 
 function AddTab(props){
   const [albums, setAlbums] = useState([]);
-  const [turnName, setTurnName] = useState(["",""]);
-
-
-useEffect(() => {
-  //Sort the array of objects by descending order in Album Count and ascending order in turn
-  props.albumOrder.sort((a, b) => {
-    if (a.albumCount === b.albumCount) {
-      return b.turn - a.turn;
-    }
-    return a.albumCount - b.albumCount;
-  });
-  
-  // Take the first two objects from the sorted array and map them into an array
-  const firstTwoObjects = props.albumOrder.slice(0, 2);
-  const turnNames = firstTwoObjects.map(obj => obj.name);
-  setTurnName(turnNames);
-}, turnName);
-
-  
 
   function handleInputEnter (event) {
     if (event.key === "Enter")
