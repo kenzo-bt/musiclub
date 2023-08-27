@@ -18,6 +18,9 @@ function Record(props) {
   }
 
   async function toggleTracks(event) {
+    if (!props.readyToOpen) {
+      return;
+    }
     if (tracksVisible) {
       setTracksVisible(false);
     }
