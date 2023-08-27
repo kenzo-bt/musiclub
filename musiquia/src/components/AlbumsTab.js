@@ -6,6 +6,7 @@ function AlbumsTab({requestToken, userInfo}) {
   const [albums, setAlbums] = useState([]);
   const [likedTracks, setLikedTracks] = useState([]);
   const [otherUsersLiked, setOtherUsersLiked] = useState([]);
+  const [userLikesFetched, setUserLikesFetched] = useState(false);
   let trackPlayCallback = undefined;
 
   useEffect(() => {
@@ -21,6 +22,7 @@ function AlbumsTab({requestToken, userInfo}) {
       setOtherUsersLiked(data.likedTracks);
       const userLikes = data.likedTracks.filter(track => track.likedBy.includes(userInfo.id));
       setLikedTracks(userLikes.map(track => track.id));
+      setUserLikesFetched(true);
     }
 
     async function fetchAlbums() {
@@ -106,6 +108,7 @@ function AlbumsTab({requestToken, userInfo}) {
               playTrack={playTrack}
               pauseTrack={pauseTrack}
               otherLikes={otherUsersLiked}
+              readyToOpen={userLikesFetched}
             />
           );
         })}
