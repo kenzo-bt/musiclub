@@ -217,11 +217,6 @@ def add_liked_track_full(id, trackId):
     user = User.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
-    # Check if track already exists inside user's liked tracks
-    likedTracks = json.loads(user.likedTracks)
-    for likedId in likedTracks:
-        if likedId == trackId:
-            return {"Error": "Track already liked by user"}, 400
     # Check if there is an entry for this track in LIKED
     track = Liked.query.get(trackId)
     if track is None:
@@ -230,16 +225,16 @@ def add_liked_track_full(id, trackId):
         db.session.add(newTrack)
         db.session.commit()
         track = Liked.query.get(trackId)
-    # Check if track needs to be added to playlist
+    # Check if user has already liked this track
     users = json.loads(track.likedBy)
+    if int(id) in users:
+        return {"Error": "User has already liked this track"}, 400
+    # Check if track needs to be added to playlist
     if user.id not in invalidUsers and validUserCount(users) == (majority - 1):
         # Add to playlist
         addSuccess = addToPlaylist(trackId)
         if addSuccess == False:
             return {"Error": "Unable to add track to playlist"}, 400
-    # USER table update
-    likedTracks.append(trackId)
-    user.likedTracks = json.dumps(likedTracks)
     # LIKED table update
     userIdInt = int(id)
     users.append(userIdInt)
@@ -253,35 +248,26 @@ def remove_liked_track_full(id, trackId):
     user = User.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
-    # Check if track exists inside user's liked tracks
-    likedTracks = json.loads(user.likedTracks)
-    found = False
-    for likedId in likedTracks:
-        if likedId == trackId:
-            found = True
-            break
-    if found:
-        track = Liked.query.get(trackId)
-        users = json.loads(track.likedBy)
-        if user.id not in invalidUsers and validUserCount(users) == majority:
-            removeSuccess = removeFromPlaylist(trackId)
-            if removeSuccess == False:
-                return {"Error": "Unable to remove track from playlist"}, 400
-        # Update USER table
-        likedTracks.remove(trackId)
-        user.likedTracks = json.dumps(likedTracks)
-        # Update LIKED table
-        userIdInt = int(id)
-        if userIdInt in users:
-            users.remove(userIdInt)
-            track.likedBy = json.dumps(users)
-        else:
-            return {"Error": "User had not previously liked this song"}, 400
-        # Commit changes
-        db.session.commit()
-        return {"trackId": trackId, "user": userIdInt, "status": "DELETE SUCCESS"}, 200
+    track = Liked.query.get(trackId)
+    users = json.loads(track.likedBy)
+    # Check if user had not previously liked this track
+    if int(id) not in users:
+        return {"Error": "User had not previously liked this track"}, 400
+    # Remove from playlist if necessary
+    if user.id not in invalidUsers and validUserCount(users) == majority:
+        removeSuccess = removeFromPlaylist(trackId)
+        if removeSuccess == False:
+            return {"Error": "Unable to remove track from playlist"}, 400
+    # Update LIKED table
+    userIdInt = int(id)
+    if userIdInt in users:
+        users.remove(userIdInt)
+        track.likedBy = json.dumps(users)
     else:
-        return {"Error": "Could not remove. Track was not found on user likedTracks."}, 400
+        return {"Error": "User had not previously liked this song"}, 400
+    # Commit changes
+    db.session.commit()
+    return {"trackId": trackId, "user": userIdInt, "status": "DELETE SUCCESS"}, 200
 
 ### LIKED TRACKS
 

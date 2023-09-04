@@ -30,6 +30,8 @@ function Track(props) {
       return true;
     }
     else {
+      const data = await response.json();
+      console.log(data["Error"]);
       return false;
     }
   }
@@ -47,6 +49,8 @@ function Track(props) {
       return true;
     }
     else {
+      const data = await response.json();
+      console.log(data["Error"]);
       return false;
     }
   }
