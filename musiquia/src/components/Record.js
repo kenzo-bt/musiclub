@@ -37,7 +37,7 @@ function Record(props) {
         'Authorization': 'Bearer ' + getLocalToken()
       }
     }
-    const response = await fetch("https://api.spotify.com/v1/albums/" + props.albumID + "/tracks", queryParameters);
+    const response = await fetch("https://api.spotify.com/v1/albums/" + props.albumID + "/tracks?limit=50", queryParameters);
     if (response.status === 200) {
       const data = await response.json();
       const tracks = data.items.map(track => ({"name": track.name, "id": track.id, "preview": track.preview_url}));
