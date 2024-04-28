@@ -37,10 +37,10 @@ class musiquia_user(db.Model):
     def __repr__(self):
         return f"{self.id} - {self.username}"
 
-class Auth(db.Model):
+class musiquia_auth(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    refreshToken = db.Column(db.Text)
-    accessToken = db.Column(db.Text)
+    refresh_token = db.Column(db.Text)
+    access_token = db.Column(db.Text)
 
 class Liked(db.Model):
     # id = db.Column(db.Integer, primary_key=True)
@@ -292,11 +292,11 @@ def get_all_liked():
 ### AUTH
 
 def get_access_token():
-    currentAuthTokens = Auth.query.get(1)
+    currentAuthTokens = musiquia_auth.query.get(1)
     if currentAuthTokens is None:
         return -1
-    accessToken = currentAuthTokens.accessToken
-    refreshToken = currentAuthTokens.refreshToken
+    accessToken = currentAuthTokens.access_token
+    refresh_token = currentAuthTokens.refresh_token
     # Check if access token is alive
     url = 'https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl'
     headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
@@ -310,12 +310,12 @@ def get_access_token():
     base64_auth_message = base64_bytes.decode('ascii')
     url = 'https://accounts.spotify.com/api/token'
     headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + base64_auth_message}
-    payload = {'grant_type': 'refresh_token', 'refresh_token': refreshToken}
+    payload = {'grant_type': 'refresh_token', 'refresh_token': refresh_token}
     response = requests.post(url, headers=headers, params=payload)
     if response.status_code == 200:
         data = response.json()
         newToken = data['access_token']
-        currentAuthTokens.accessToken = newToken
+        currentAuthTokens.access_token = newToken
         db.session.commit()
         return newToken
     else:
