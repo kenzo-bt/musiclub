@@ -1,3 +1,4 @@
+import { API_URL } from '../Globals.js'
 import { useState, useEffect } from 'react';
 import Record from './Record.js';
 import './AlbumsTab.css';
@@ -17,7 +18,7 @@ function AlbumsTab({requestToken, userInfo}) {
           'Content-Type': 'application/json'
         }
       };
-      const response = await fetch('https://myxos.online/musicAPI/liked', queryParameters);
+      const response = await fetch(API_URL + 'liked', queryParameters);
       const data = await response.json();
       setOtherUsersLiked(data.likedTracks);
       const userLikes = data.likedTracks.filter(track => track.likedBy.includes(userInfo.id));
@@ -32,7 +33,7 @@ function AlbumsTab({requestToken, userInfo}) {
           'Content-Type': 'application/json'
         }
       };
-      const response = await fetch('https://myxos.online/musicAPI/selectedAlbums', queryParameters);
+      const response = await fetch(API_URL + 'selectedAlbums', queryParameters);
       const data = await response.json();
       setAlbums(data.albums);
     }

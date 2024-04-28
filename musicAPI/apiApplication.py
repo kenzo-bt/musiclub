@@ -1,60 +1,64 @@
+import os
 import sys
 import json
 import requests
 import base64
 from flask import Flask, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-app = Flask(__name__)
+from flask_cors import CORS
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app = Flask(__name__)
+CORS(app)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 app.app_context().push()
 
-class Album(db.Model):
+class musiquia_album(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    albumID = db.Column(db.String(80), unique=True, nullable=False)
+    album_id = db.Column(db.String(80), unique=True, nullable=False)
     name = db.Column(db.String(80), unique=False, nullable=False)
     artist = db.Column(db.String(80), unique=False, nullable=False)
     year = db.Column(db.String(80), unique=False, nullable=False)
     cover = db.Column(db.String(80), unique=False, nullable=False)
-    ownerID = db.Column(db.Integer)
+    owner_id = db.Column(db.Integer)
     tracks = db.Column(db.Text)
 
     def __repr__(self):
-        return f"{self.id} - {self.albumID}"
+        return f"{self.id} - {self.album_id}"
 
-class User(db.Model):
+class musiquia_user(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=False, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
-    likedTracks = db.Column(db.Text)
+    liked_tracks = db.Column(db.Text)
 
     def __repr__(self):
         return f"{self.id} - {self.username}"
 
-class Auth(db.Model):
+class musiquia_auth(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    refreshToken = db.Column(db.Text)
-    accessToken = db.Column(db.Text)
+    refresh_token = db.Column(db.Text)
+    access_token = db.Column(db.Text)
 
-class Liked(db.Model):
+class musiquia_liked(db.Model):
     # id = db.Column(db.Integer, primary_key=True)
     id = db.Column(db.String(80), primary_key=True)
-    likedBy = db.Column(db.Text)
+    liked_by = db.Column(db.Text)
 
-class Cookie(db.Model):
+class musiquia_cookie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    userId = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     os = db.Column(db.Text, nullable=False)
     key = db.Column(db.Text, nullable=False)
 
 ###### GLOBALS
 
-playlistId = "3Z9UoDIlecIROC1I6HYG91"
-clientId = "9cb9b55a9f4f402a8a250030f7c35468"
-clientSecret = "e7a704cc2a4341279936c2feaee4cbe6"
+playlistId = os.environ.get('PLAYLIST_ID')
+clientId = os.environ.get('CLIENT_ID')
+clientSecret = os.environ.get('CLIENT_SECRET')
 majority = 2
 invalidUsers = [8]
 
@@ -122,18 +126,18 @@ def index():
 # Get all selected albums
 @app.route('/selectedAlbums')
 def get_selected_albums():
-    albums = Album.query.all()
+    albums = musiquia_album.query.all()
 
     output = []
     for album in albums:
         album_data = {
             'id': album.id,
-            'albumID': album.albumID,
+            'albumID': album.album_id,
             'name': album.name,
             'artist': album.artist,
             'year': album.year,
             'cover': album.cover,
-            'ownerID': album.ownerID,
+            'ownerID': album.owner_id,
             'tracks': json.loads(album.tracks)
             }
         output.append(album_data)
@@ -143,26 +147,26 @@ def get_selected_albums():
 # Add an album
 @app.route('/selectedAlbums', methods=['POST'])
 def add_selected_album():
-    album = Album(
-        albumID=request.json['albumID'],
+    album = musiquia_album(
+        album_id=request.json['albumID'],
         name=request.json['name'],
         artist=request.json['artist'],
         year=request.json['year'],
         cover=request.json['cover'],
-        ownerID=request.json['ownerID'],
+        owner_id=request.json['ownerID'],
         tracks=json.dumps(request.json['tracks'])
         )
-    if Album.query.filter_by(albumID=album.albumID).first() is None:
+    if musiquia_album.query.filter_by(album_id=album.album_id).first() is None:
         db.session.add(album)
         db.session.commit()
-        return {'id': album.id, 'albumID': album.albumID}
+        return {'id': album.id, 'albumID': album.album_id}
     else:
         return {"error": "Album already selected"}
 
 # Remove an album from selected
 @app.route('/selectedAlbums/<id>', methods=['DELETE'])
 def remove_selected_album(id):
-    album = Album.query.filter_by(albumID=id).first()
+    album = musiquia_album.query.filter_by(album_id=id).first()
     if album is None:
         return {"error": "Album not found"}, 404
     db.session.delete(album)
@@ -174,7 +178,7 @@ def remove_selected_album(id):
 # Get all users
 @app.route('/users')
 def get_users():
-    users = User.query.all()
+    users = musiquia_user.query.all()
 
     output = []
     for user in users:
@@ -190,22 +194,22 @@ def get_users():
 # Get individual user
 @app.route('/users/<name>')
 def get_user(name):
-    user = User.query.filter_by(username=name).first()
+    user = musiquia_user.query.filter_by(username=name).first()
     if user is None:
         return {"Error": "User not found"}, 404
-    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}, 200
+    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.liked_tracks)}, 200
 
 @app.route('/users/<id>')
 def get_user_by_id(id):
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
-    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}, 200
+    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.liked_tracks)}, 200
 
 # Add user
 @app.route('/users', methods=['POST'])
 def add_user():
-    user = User(username=request.json['username'], password=request.json['password'], likedTracks=json.dumps([]))
+    user = musiquia_user(username=request.json['username'], password=request.json['password'], liked_tracks=json.dumps([]))
     db.session.add(user)
     db.session.commit()
     return {"id": user.id, "username": user.username, "password": user.password}, 201
@@ -214,19 +218,19 @@ def add_user():
 @app.route('/users/<id>/addTrackFull/<trackId>', methods=['POST'])
 def add_liked_track_full(id, trackId):
     # Check if user exists
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
     # Check if there is an entry for this track in LIKED
-    track = Liked.query.get(trackId)
+    track = musiquia_liked.query.get(trackId)
     if track is None:
         # Create entry for this track
-        newTrack = Liked(id=trackId, likedBy="[]")
+        newTrack = musiquia_liked(id=trackId, liked_by="[]")
         db.session.add(newTrack)
         db.session.commit()
-        track = Liked.query.get(trackId)
+        track = musiquia_liked.query.get(trackId)
     # Check if user has already liked this track
-    users = json.loads(track.likedBy)
+    users = json.loads(track.liked_by)
     if int(id) in users:
         return {"Error": "User has already liked this track"}, 400
     # Check if track needs to be added to playlist
@@ -238,18 +242,18 @@ def add_liked_track_full(id, trackId):
     # LIKED table update
     userIdInt = int(id)
     users.append(userIdInt)
-    track.likedBy = json.dumps(users)
+    track.liked_by = json.dumps(users)
     db.session.commit()
     return {"trackId": trackId, "user": userIdInt, "status": "POST SUCCESS"}, 200
 
 # Remove track from user's liked tracks FULL
 @app.route('/users/<id>/removeTrackFull/<trackId>', methods=['DELETE'])
 def remove_liked_track_full(id, trackId):
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
-    track = Liked.query.get(trackId)
-    users = json.loads(track.likedBy)
+    track = musiquia_liked.query.get(trackId)
+    users = json.loads(track.liked_by)
     # Check if user had not previously liked this track
     if int(id) not in users:
         return {"Error": "User had not previously liked this track"}, 400
@@ -262,7 +266,7 @@ def remove_liked_track_full(id, trackId):
     userIdInt = int(id)
     if userIdInt in users:
         users.remove(userIdInt)
-        track.likedBy = json.dumps(users)
+        track.liked_by = json.dumps(users)
     else:
         return {"Error": "User had not previously liked this song"}, 400
     # Commit changes
@@ -274,13 +278,13 @@ def remove_liked_track_full(id, trackId):
 # Get all liked tracks
 @app.route('/liked')
 def get_all_liked():
-    allTracks = Liked.query.all()
+    allTracks = musiquia_liked.query.all()
 
     output = []
     for track in allTracks:
         track_data = {
             'id': track.id,
-            'likedBy': json.loads(track.likedBy)
+            'likedBy': json.loads(track.liked_by)
             }
         output.append(track_data)
 
@@ -289,11 +293,11 @@ def get_all_liked():
 ### AUTH
 
 def get_access_token():
-    currentAuthTokens = Auth.query.get(1)
+    currentAuthTokens = musiquia_auth.query.get(1)
     if currentAuthTokens is None:
         return -1
-    accessToken = currentAuthTokens.accessToken
-    refreshToken = currentAuthTokens.refreshToken
+    accessToken = currentAuthTokens.access_token
+    refresh_token = currentAuthTokens.refresh_token
     # Check if access token is alive
     url = 'https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl'
     headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken}
@@ -307,12 +311,12 @@ def get_access_token():
     base64_auth_message = base64_bytes.decode('ascii')
     url = 'https://accounts.spotify.com/api/token'
     headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + base64_auth_message}
-    payload = {'grant_type': 'refresh_token', 'refresh_token': refreshToken}
+    payload = {'grant_type': 'refresh_token', 'refresh_token': refresh_token}
     response = requests.post(url, headers=headers, params=payload)
     if response.status_code == 200:
         data = response.json()
         newToken = data['access_token']
-        currentAuthTokens.accessToken = newToken
+        currentAuthTokens.access_token = newToken
         db.session.commit()
         return newToken
     else:
@@ -332,14 +336,14 @@ def get_active_access_token():
 # Set a cookie
 @app.route('/cookies/set/<id>/<value>', methods=['POST'])
 def set_login_cookie(id, value):
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 400
     operatingSystem = value.split(":")[0]
     cookieKey = value.split(":")[1]
-    existingCookie = Cookie.query.filter_by(userId=id, os=operatingSystem).first()
+    existingCookie = musiquia_cookie.query.filter_by(user_id=id, os=operatingSystem).first()
     if existingCookie is None:
-        cookie = Cookie(userId=id, os=operatingSystem, key=cookieKey)
+        cookie = musiquia_cookie(user_id=id, os=operatingSystem, key=cookieKey)
         db.session.add(cookie)
         db.session.commit()
         return {"User": id, "Cookie": value, "Action": "Cookie created"}, 200
@@ -352,7 +356,7 @@ def set_login_cookie(id, value):
 def request_cookie_login(value):
     operatingSystem = value.split(":")[0]
     cookieKey = value.split(":")[1]
-    cookie = Cookie.query.filter_by(os=operatingSystem, key=cookieKey).first()
+    cookie = musiquia_cookie.query.filter_by(os=operatingSystem, key=cookieKey).first()
     if cookie is None:
         return {"Error": "No user associated with that cookie"}, 400
-    return get_user_by_id(cookie.userId)
+    return get_user_by_id(cookie.user_id)
