@@ -47,9 +47,9 @@ class musiquia_liked(db.Model):
     id = db.Column(db.String(80), primary_key=True)
     liked_by = db.Column(db.Text)
 
-class Cookie(db.Model):
+class musiquia_cookie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    userId = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     os = db.Column(db.Text, nullable=False)
     key = db.Column(db.Text, nullable=False)
 
@@ -340,9 +340,9 @@ def set_login_cookie(id, value):
         return {"Error": "User not found"}, 400
     operatingSystem = value.split(":")[0]
     cookieKey = value.split(":")[1]
-    existingCookie = Cookie.query.filter_by(userId=id, os=operatingSystem).first()
+    existingCookie = musiquia_cookie.query.filter_by(user_id=id, os=operatingSystem).first()
     if existingCookie is None:
-        cookie = Cookie(userId=id, os=operatingSystem, key=cookieKey)
+        cookie = musiquia_cookie(user_id=id, os=operatingSystem, key=cookieKey)
         db.session.add(cookie)
         db.session.commit()
         return {"User": id, "Cookie": value, "Action": "Cookie created"}, 200
@@ -355,7 +355,7 @@ def set_login_cookie(id, value):
 def request_cookie_login(value):
     operatingSystem = value.split(":")[0]
     cookieKey = value.split(":")[1]
-    cookie = Cookie.query.filter_by(os=operatingSystem, key=cookieKey).first()
+    cookie = musiquia_cookie.query.filter_by(os=operatingSystem, key=cookieKey).first()
     if cookie is None:
         return {"Error": "No user associated with that cookie"}, 400
-    return get_user_by_id(cookie.userId)
+    return get_user_by_id(cookie.user_id)
