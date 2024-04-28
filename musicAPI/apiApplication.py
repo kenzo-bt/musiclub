@@ -42,10 +42,10 @@ class musiquia_auth(db.Model):
     refresh_token = db.Column(db.Text)
     access_token = db.Column(db.Text)
 
-class Liked(db.Model):
+class musiquia_liked(db.Model):
     # id = db.Column(db.Integer, primary_key=True)
     id = db.Column(db.String(80), primary_key=True)
-    likedBy = db.Column(db.Text)
+    liked_by = db.Column(db.Text)
 
 class Cookie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -221,15 +221,15 @@ def add_liked_track_full(id, trackId):
     if user is None:
         return {"Error": "User not found"}, 404
     # Check if there is an entry for this track in LIKED
-    track = Liked.query.get(trackId)
+    track = musiquia_liked.query.get(trackId)
     if track is None:
         # Create entry for this track
-        newTrack = Liked(id=trackId, likedBy="[]")
+        newTrack = musiquia_liked(id=trackId, liked_by="[]")
         db.session.add(newTrack)
         db.session.commit()
-        track = Liked.query.get(trackId)
+        track = musiquia_liked.query.get(trackId)
     # Check if user has already liked this track
-    users = json.loads(track.likedBy)
+    users = json.loads(track.liked_by)
     if int(id) in users:
         return {"Error": "User has already liked this track"}, 400
     # Check if track needs to be added to playlist
@@ -241,7 +241,7 @@ def add_liked_track_full(id, trackId):
     # LIKED table update
     userIdInt = int(id)
     users.append(userIdInt)
-    track.likedBy = json.dumps(users)
+    track.liked_by = json.dumps(users)
     db.session.commit()
     return {"trackId": trackId, "user": userIdInt, "status": "POST SUCCESS"}, 200
 
@@ -251,8 +251,8 @@ def remove_liked_track_full(id, trackId):
     user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
-    track = Liked.query.get(trackId)
-    users = json.loads(track.likedBy)
+    track = musiquia_liked.query.get(trackId)
+    users = json.loads(track.liked_by)
     # Check if user had not previously liked this track
     if int(id) not in users:
         return {"Error": "User had not previously liked this track"}, 400
@@ -265,7 +265,7 @@ def remove_liked_track_full(id, trackId):
     userIdInt = int(id)
     if userIdInt in users:
         users.remove(userIdInt)
-        track.likedBy = json.dumps(users)
+        track.liked_by = json.dumps(users)
     else:
         return {"Error": "User had not previously liked this song"}, 400
     # Commit changes
@@ -277,13 +277,13 @@ def remove_liked_track_full(id, trackId):
 # Get all liked tracks
 @app.route('/liked')
 def get_all_liked():
-    allTracks = Liked.query.all()
+    allTracks = musiquia_liked.query.all()
 
     output = []
     for track in allTracks:
         track_data = {
             'id': track.id,
-            'likedBy': json.loads(track.likedBy)
+            'likedBy': json.loads(track.liked_by)
             }
         output.append(track_data)
 
