@@ -1,5 +1,5 @@
 export const PLAYLIST_ID = "3Z9UoDIlecIROC1I6HYG91"; // ID for the playlist where common songs are added
-export const API_URL = "https://www.myxos.online/musicAPI/";
+export const API_URL = "https://musiquiaapi.onrender.com/";
 
 export function showAlert(title, message) {
   document.getElementById("alertTitle").innerHTML = title;
