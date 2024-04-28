@@ -28,11 +28,11 @@ class musiquia_album(db.Model):
     def __repr__(self):
         return f"{self.id} - {self.album_id}"
 
-class User(db.Model):
+class musiquia_user(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=False, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
-    likedTracks = db.Column(db.Text)
+    liked_tracks = db.Column(db.Text)
 
     def __repr__(self):
         return f"{self.id} - {self.username}"
@@ -177,7 +177,7 @@ def remove_selected_album(id):
 # Get all users
 @app.route('/users')
 def get_users():
-    users = User.query.all()
+    users = musiquia_user.query.all()
 
     output = []
     for user in users:
@@ -193,22 +193,22 @@ def get_users():
 # Get individual user
 @app.route('/users/<name>')
 def get_user(name):
-    user = User.query.filter_by(username=name).first()
+    user = musiquia_user.query.filter_by(username=name).first()
     if user is None:
         return {"Error": "User not found"}, 404
-    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}, 200
+    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.liked_tracks)}, 200
 
 @app.route('/users/<id>')
 def get_user_by_id(id):
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
-    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.likedTracks)}, 200
+    return {"id": user.id, "username": user.username, "password": user.password, "likedTracks": json.loads(user.liked_tracks)}, 200
 
 # Add user
 @app.route('/users', methods=['POST'])
 def add_user():
-    user = User(username=request.json['username'], password=request.json['password'], likedTracks=json.dumps([]))
+    user = musiquia_user(username=request.json['username'], password=request.json['password'], liked_tracks=json.dumps([]))
     db.session.add(user)
     db.session.commit()
     return {"id": user.id, "username": user.username, "password": user.password}, 201
@@ -217,7 +217,7 @@ def add_user():
 @app.route('/users/<id>/addTrackFull/<trackId>', methods=['POST'])
 def add_liked_track_full(id, trackId):
     # Check if user exists
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
     # Check if there is an entry for this track in LIKED
@@ -248,7 +248,7 @@ def add_liked_track_full(id, trackId):
 # Remove track from user's liked tracks FULL
 @app.route('/users/<id>/removeTrackFull/<trackId>', methods=['DELETE'])
 def remove_liked_track_full(id, trackId):
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 404
     track = Liked.query.get(trackId)
@@ -335,7 +335,7 @@ def get_active_access_token():
 # Set a cookie
 @app.route('/cookies/set/<id>/<value>', methods=['POST'])
 def set_login_cookie(id, value):
-    user = User.query.get(id)
+    user = musiquia_user.query.get(id)
     if user is None:
         return {"Error": "User not found"}, 400
     operatingSystem = value.split(":")[0]
