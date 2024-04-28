@@ -1,6 +1,6 @@
 {
   "name": "musiquia",
-  "homepage": "https://www.myxos.online/musiquia",
+  "homepage": "https://kenzo-bt.github.io/musiclub",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -36,5 +36,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
   }
 }
