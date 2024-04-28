@@ -4,26 +4,29 @@ import requests
 import base64
 from flask import Flask, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-app = Flask(__name__)
+from flask_cors import CORS
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app = Flask(__name__)
+CORS(app)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 app.app_context().push()
 
-class Album(db.Model):
+class musiquia_album(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    albumID = db.Column(db.String(80), unique=True, nullable=False)
+    album_id = db.Column(db.String(80), unique=True, nullable=False)
     name = db.Column(db.String(80), unique=False, nullable=False)
     artist = db.Column(db.String(80), unique=False, nullable=False)
     year = db.Column(db.String(80), unique=False, nullable=False)
     cover = db.Column(db.String(80), unique=False, nullable=False)
-    ownerID = db.Column(db.Integer)
+    owner_id = db.Column(db.Integer)
     tracks = db.Column(db.Text)
 
     def __repr__(self):
-        return f"{self.id} - {self.albumID}"
+        return f"{self.id} - {self.album_id}"
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -122,18 +125,18 @@ def index():
 # Get all selected albums
 @app.route('/selectedAlbums')
 def get_selected_albums():
-    albums = Album.query.all()
+    albums = musiquia_album.query.all()
 
     output = []
     for album in albums:
         album_data = {
             'id': album.id,
-            'albumID': album.albumID,
+            'albumID': album.album_id,
             'name': album.name,
             'artist': album.artist,
             'year': album.year,
             'cover': album.cover,
-            'ownerID': album.ownerID,
+            'ownerID': album.owner_id,
             'tracks': json.loads(album.tracks)
             }
         output.append(album_data)
@@ -143,26 +146,26 @@ def get_selected_albums():
 # Add an album
 @app.route('/selectedAlbums', methods=['POST'])
 def add_selected_album():
-    album = Album(
-        albumID=request.json['albumID'],
+    album = musiquia_album(
+        album_id=request.json['albumID'],
         name=request.json['name'],
         artist=request.json['artist'],
         year=request.json['year'],
         cover=request.json['cover'],
-        ownerID=request.json['ownerID'],
+        owner_id=request.json['ownerID'],
         tracks=json.dumps(request.json['tracks'])
         )
-    if Album.query.filter_by(albumID=album.albumID).first() is None:
+    if musiquia_album.query.filter_by(album_id=album.album_id).first() is None:
         db.session.add(album)
         db.session.commit()
-        return {'id': album.id, 'albumID': album.albumID}
+        return {'id': album.id, 'albumID': album.album_id}
     else:
         return {"error": "Album already selected"}
 
 # Remove an album from selected
 @app.route('/selectedAlbums/<id>', methods=['DELETE'])
 def remove_selected_album(id):
-    album = Album.query.filter_by(albumID=id).first()
+    album = musiquia_album.query.filter_by(album_id=id).first()
     if album is None:
         return {"error": "Album not found"}, 404
     db.session.delete(album)
