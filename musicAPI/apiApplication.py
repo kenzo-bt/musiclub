@@ -55,9 +55,9 @@ class musiquia_cookie(db.Model):
 
 ###### GLOBALS
 
-playlistId = "3Z9UoDIlecIROC1I6HYG91"
-clientId = "9cb9b55a9f4f402a8a250030f7c35468"
-clientSecret = "e7a704cc2a4341279936c2feaee4cbe6"
+playlistId = os.environ.get('PLAYLIST_ID')
+clientId = os.environ.get('CLIENT_ID')
+clientSecret = os.environ.get('CLIENT_SECRET')
 majority = 2
 invalidUsers = [8]
 
